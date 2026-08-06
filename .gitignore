@@ -38,6 +38,9 @@ user-data/
 benchmarks/
 tmp/
 *.tmp
+mowftee-backup-*.tar.gz.gpg
+mowftee-backup-*.tar.gz.gpg.sha256
+*.partial
 
 # Downloaded/generated AI assets
 models/
