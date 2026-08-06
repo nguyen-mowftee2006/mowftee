@@ -68,7 +68,7 @@ Phong cách tương tác của dự án lấy cảm hứng từ kiểu tương t
 - Python hệ thống 3.14.6 không được dùng để cài dependency project.
 - Dependency được khóa bằng `uv.lock`; setup dùng `uv sync --locked`.
 
-## Bố trí dữ liệu dự kiến
+## Bố trí dữ liệu đã chốt
 
 ```text
 $HOME/Projects/mowftee/              source code
@@ -79,7 +79,9 @@ $HOME/.cache/mowftee/                cache
 /srv/mowftee/models/ollama/          model tải lại được
 ```
 
-Đường dẫn `/srv` chỉ được chốt cuối sau khi kiểm tra chính sách snapshot của subvolume `@srv`.
+Các XDG path dùng biến môi trường với giá trị mặc định dưới `$HOME`, không hard-code user. `@srv` hiện không bị snapshot tự động và không cần child subvolume cho model. `/srv/mowftee/models/ollama/` chỉ được tạo với `ollama:ollama 0750` sau khi user/group Ollama tồn tại.
+
+Public model và cache không cần backup. Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy; triển khai backup thuộc G0-06.
 
 ## Quy tắc làm việc
 
@@ -126,10 +128,11 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Tạo `.gitignore`, metadata project tối thiểu và `LICENSE` bảo lưu quyền.
 - Chốt môi trường G0-03 với CPython 3.11, `uv`, `.venv/` và `uv.lock`.
 - Tạo `scripts/setup-python.sh`; kiểm tra lock, sync, import, pytest và Ruff đều đạt.
+- Chốt storage layout G0-04, tạo XDG directories `0700` và parent model path `root:root 0755`.
+- Xác nhận `@srv` không bị snapshot tự động; không tạo child subvolume model.
 
 ### Chưa hoàn thành
 
-- Chưa kiểm tra snapshot policy cho `@srv`.
 - Chưa cài Ollama.
 - Chưa benchmark model.
 - Chưa chọn persona, STT, TTS hoặc avatar.
@@ -137,22 +140,21 @@ Không chuyển giai đoạn nếu chưa đạt:
 ### Sự cố đang mở
 
 1. Micro mặc định đang mute; chỉ xử lý ở giai đoạn voice.
-2. Chưa biết `@srv` có được snapshot bởi cấu hình hiện tại hay không.
-3. Model path chưa được áp dụng.
-4. Không có backup ngoài ổ; cloud/GitHub chỉ bảo vệ phần phù hợp.
+2. Thư mục `/srv/mowftee/models/ollama` và owner `ollama:ollama` được hoãn đến khi cài runtime.
+3. Không có backup ngoài ổ; cloud/GitHub chỉ bảo vệ phần phù hợp.
 
 ## Bước phải làm ngay
 
-`G0-04 — Chốt storage layout`.
+`G0-05 — Thiết lập cấu hình và logging`.
 
-Trước khi tạo đường dẫn hoặc thay đổi quyền:
+Mục tiêu dự kiến:
 
-1. Kiểm tra snapshot policy cho `@`, `@home` và `@srv`.
-2. Xác minh quyền ghi dự kiến cho model path.
-3. Kiểm tra dung lượng trống.
-4. Quyết định có cần child subvolume riêng cho model hay không.
+1. Tạo config mặc định và config mẫu.
+2. Chốt schema và validation ban đầu.
+3. Thiết lập app, performance và audit logging.
+4. Kiểm tra lỗi cấu hình và bảo vệ secret.
 
-Chưa cài Ollama hoặc tải model trong bước này.
+G0-05 chưa được thực hiện. Chưa cài Ollama hoặc tải model.
 
 ## Cách trả lời
 

@@ -229,3 +229,49 @@ Khóa môi trường Python riêng cho project, tách khỏi Python hệ thống
 ### Việc tiếp theo
 
 `G0-04 — Chốt storage layout`.
+
+
+---
+
+## 2026-08-07 00:51 +07 — G0-04 Storage layout
+
+### Khảo sát
+
+- `/`, `/home` và `/srv` là các Btrfs subvolume riêng, mount `rw` với `compress=zstd:1`.
+- `@srv` không bị snapshot tự động; Snapper, Timeshift và Btrfs Assistant không được cài hoặc cấu hình.
+- Quota/qgroup đang tắt; CoW giữ mặc định.
+- Không có ổ ngoài hoặc cloud mount dành cho backup.
+- User/group, service và biến `OLLAMA_MODELS` của Ollama chưa tồn tại.
+
+### Quyết định
+
+- XDG paths dùng biến môi trường với giá trị mặc định dưới `$HOME`, không hard-code user.
+- Public model nằm tại `/srv/mowftee/models/ollama`; không tạo child Btrfs subvolume.
+- Public model và cache không cần backup.
+- Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy; triển khai backup thuộc G0-06.
+- Chỉ tạo model directory với `ollama:ollama 0750` sau khi user/group Ollama tồn tại.
+
+### Thay đổi
+
+- Tạo các XDG directories của Mowftee với owner là user hiện tại và mode `0700`.
+- Tạo `/srv/mowftee` và `/srv/mowftee/models` với `root:root 0755`.
+- Tạo script idempotent `scripts/setup-storage.sh`.
+- Chốt storage metadata trong `config/model-manifest.yaml`.
+- Không tạo config, database, log, secret, backup target hoặc `/srv/mowftee/models/ollama`.
+
+### Kiểm tra
+
+- `scripts/setup-storage.sh` chạy liên tiếp hai lần thành công.
+- Shell syntax hợp lệ.
+- Owner và mode của toàn bộ Mowftee XDG directories đạt yêu cầu.
+- Hai system parent directories là `root:root 0755`.
+- Không có file runtime trong XDG paths.
+- `/srv/ftp` và `/srv/http` không bị thay đổi.
+
+### Trạng thái
+
+`G0-04`: **Hoàn thành**, với deferred action tạo/chown model directory ở bước cài Ollama.
+
+### Việc tiếp theo
+
+`G0-05 — Thiết lập cấu hình và logging`.

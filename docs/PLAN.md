@@ -340,6 +340,8 @@ Kết quả:
 
 ### Bước G0-04 — Chốt storage layout
 
+- **Trạng thái:** Hoàn thành.
+
 Kiểm tra:
 
 - Chính sách snapshot cho `@`, `@home`, `@srv`.
@@ -353,6 +355,16 @@ Kiểm tra:
 - Đường dẫn memory và log.
 - Script tạo thư mục và quyền.
 - Decision Log cập nhật.
+
+Kết quả:
+
+- XDG paths dùng biến môi trường với giá trị mặc định, không hard-code user.
+- Các thư mục config, data, state và cache của Mowftee có owner là user hiện tại và mode `0700`.
+- Model path cuối cùng là `/srv/mowftee/models/ollama`; parent `/srv/mowftee/models` là `root:root 0755`.
+- `@srv` hiện không bị snapshot tự động; không tạo child Btrfs subvolume cho model.
+- Public model không cần backup. Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy ở G0-06.
+- Thư mục model Ollama được hoãn tạo với owner `ollama:ollama` và mode `0750` cho đến khi user/group Ollama tồn tại ở bước cài runtime.
+- `scripts/setup-storage.sh` chạy lặp lại an toàn và không tạo file runtime.
 
 ### Bước G0-05 — Thiết lập cấu hình và logging
 
@@ -406,7 +418,7 @@ Tiêu chí:
 - [x] Có baseline phần cứng.
 - [x] Repo và `.gitignore` chuẩn.
 - [x] Python environment được khóa.
-- [ ] Storage layout được xác minh.
+- [x] Storage layout được xác minh.
 - [ ] Config schema ban đầu.
 - [ ] Logging hoạt động.
 - [ ] Backup/restore thử thành công.
@@ -866,14 +878,14 @@ Snapshot cùng ổ không được coi là backup.
 
 ## 16. Việc cần làm tiếp theo
 
-**Bước hiện tại:** `G0-04 — Chốt storage layout`.
+**Bước hiện tại:** `G0-05 — Thiết lập cấu hình và logging`.
 
 Mục tiêu dự kiến:
 
-1. Kiểm tra chính sách snapshot cho `@`, `@home` và `@srv`.
-2. Xác minh quyền ghi dự kiến của user và service Ollama.
-3. Kiểm tra dung lượng trống dành cho model.
-4. Quyết định có cần child subvolume riêng cho model hay không.
-5. Chốt đường dẫn model, memory và log.
+1. Tạo config mặc định và config mẫu không chứa secret.
+2. Chốt schema và validation cho cấu hình ban đầu.
+3. Thiết lập `app.jsonl`, `performance.jsonl` và `audit.jsonl`.
+4. Bảo đảm log có timestamp, request ID và không lộ secret.
+5. Kiểm thử lỗi cấu hình và quyền ghi state path.
 
-Các mục trên mới là kế hoạch; G0-04 chưa được thực hiện.
+Các mục trên mới là kế hoạch; G0-05 chưa được thực hiện.

@@ -130,22 +130,26 @@ Mount options chính:
 rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2
 ```
 
-### Kiến trúc lưu trữ đề xuất
+### Kiến trúc lưu trữ đã chốt
 
 ```text
 /srv/mowftee/models/ollama/         model tải lại được
-$HOME/.local/share/mowftee/          memory và dữ liệu cần giữ
-$HOME/.local/state/mowftee/          log/audit/benchmark
-$HOME/.cache/mowftee/                cache tạm
+${XDG_CONFIG_HOME:-$HOME/.config}/mowftee/       config riêng
+${XDG_DATA_HOME:-$HOME/.local/share}/mowftee/    memory, conversation, custom voice/LoRA
+${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/   log/audit/benchmark
+${XDG_CACHE_HOME:-$HOME/.cache}/mowftee/         cache tạm
 ```
 
 ### Lưu ý
 
 - `@srv` là subvolume riêng, phù hợp để tách model khỏi root snapshot.
-- Chưa xác minh snapshot policy có chụp `@srv` hay không.
+- Không có Snapper, Timeshift, Btrfs Assistant hoặc timer snapshot; `@srv` hiện không bị snapshot tự động.
+- Không tạo child subvolume model khi chưa có snapshot policy cho `@srv`; xem xét lại nếu policy thay đổi.
 - Snapshot trên cùng NVMe không phải backup.
 - Chưa cần tắt CoW cho SQLite.
-- Nếu model làm snapshot `@srv` phình, tạo child subvolume riêng và loại khỏi policy snapshot.
+- `/srv/mowftee` và `/srv/mowftee/models` là `root:root 0755`.
+- `/srv/mowftee/models/ollama` được hoãn tạo đến bước cài runtime; owner cuối cùng là `ollama:ollama`, mode `0750`.
+- XDG directories của Mowftee thuộc user hiện tại và dùng mode `0700`.
 
 ---
 
@@ -518,6 +522,17 @@ health_check()
 - **Reason:** Tách project khỏi Python 3.14.6 của CachyOS rolling release và giữ compatibility rộng cho các module LLM, STT và TTS dự kiến.
 - **Validated with:** CPython 3.11.15, `uv lock --check`, locked sync, import smoke test, pytest và Ruff.
 - **Revisit when:** Dependency AI đã chọn yêu cầu Python khác hoặc CPython 3.11 hết thời gian hỗ trợ phù hợp với dự án.
+
+### DEC-009 — Storage layout theo XDG và `@srv`
+
+- **Context:** Source, dữ liệu cá nhân và public model có yêu cầu quyền, snapshot và backup khác nhau.
+- **Decision:** Dùng XDG paths portable cho config/data/state/cache; public Ollama model nằm tại `/srv/mowftee/models/ollama` trên `@srv`.
+- **Snapshot:** `@srv` hiện không bị snapshot tự động; không tạo child subvolume model. Public model và cache không cần snapshot hoặc backup.
+- **Backup:** Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy; triển khai ở G0-06. Conversation history là dữ liệu nhạy cảm và backup tùy chọn theo chính sách người dùng.
+- **Permissions:** XDG directories là `0700` của user; model directory cuối cùng là `ollama:ollama 0750`.
+- **Deferred action:** Chỉ tạo `/srv/mowftee/models/ollama` sau khi user/group Ollama tồn tại ở bước cài runtime.
+- **Rollback:** Dừng ứng dụng/service, chuyển dữ liệu bằng công cụ bảo toàn metadata, cập nhật config rồi xác minh trước khi xóa đường dẫn cũ. Không xóa public model nếu chưa có xác nhận.
+- **Revisit when:** Bật snapshot cho `@srv`, thay đổi service account hoặc chuyển model sang filesystem khác.
 
 ---
 
