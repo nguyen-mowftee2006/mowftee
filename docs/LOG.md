@@ -160,3 +160,26 @@ Hoàn thiện cấu trúc repository tối thiểu mà chưa cài runtime, depen
 ### Trạng thái
 
 `G0-02`: **Hoàn thành sau khi commit các thay đổi này**.
+
+
+---
+
+## 2026-08-07 00:17 +07 — Đóng G0-02
+
+### Xác nhận repository
+
+- Remote đã đổi thành `https://github.com/nguyen-mowftee2006/mowftee.git`.
+- Commit `05afbd0` đã được push lên `origin/main`.
+- Working tree sạch.
+- Nhánh `main` đồng bộ với `origin/main`.
+- Remote `bimatnhe` được ghi trong entry trước chỉ phản ánh trạng thái lịch sử tại thời điểm entry đó được tạo.
+
+### Trạng thái
+
+`G0-02`: **Hoàn thành**.
+
+### Việc tiếp theo
+
+`G0-03 — Chốt môi trường Python`.
+
+G0-03 chưa được thực hiện trong entry này.

@@ -262,7 +262,7 @@ Không có.
 
 ### Bước G0-02 — Tạo repository và cấu trúc tối thiểu
 
-- **Trạng thái:** Hoàn thành sau commit G0-02.
+- **Trạng thái:** Hoàn thành.
 
 Quy ước định danh bắt buộc:
 
@@ -855,14 +855,15 @@ Snapshot cùng ổ không được coi là backup.
 
 ## 16. Việc cần làm tiếp theo
 
-**Bước hiện tại:** `G0-02 — Tạo repository và cấu trúc tối thiểu`.
+**Bước hiện tại:** `G0-03 — Chốt môi trường Python`.
 
-Không cài Ollama trước khi hoàn thành:
+Mục tiêu dự kiến:
 
-1. Repo và `.gitignore`.
-2. Chép bộ tài liệu này vào repo.
-3. Gửi link repository để kiểm tra cấu trúc.
-4. Kiểm tra snapshot policy cho `@srv`.
-5. Chốt Python project version.
-6. Chốt đường dẫn model.
-7. Viết lại README làm tài liệu dẫn đường.
+1. Khảo sát compatibility của các dependency dự kiến.
+2. Chọn và khóa phiên bản Python riêng cho project.
+3. Chọn công cụ quản lý môi trường và dependency.
+4. Hoàn thiện `pyproject.toml` và tạo lock file.
+5. Tạo `scripts/setup-python.sh`.
+6. Ghi nhận phiên bản Python thực tế trong môi trường project.
+
+Các mục trên mới là kế hoạch; G0-03 chưa được thực hiện.
