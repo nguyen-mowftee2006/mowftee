@@ -1,0 +1,5 @@
+[project]
+name = "mowftee"
+version = "0.0.0"
+description = "Local-first Vietnamese AI companion for CachyOS/Linux"
+readme = "README.md"

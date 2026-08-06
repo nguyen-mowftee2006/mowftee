@@ -1,0 +1,56 @@
+# Python bytecode and tooling caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Project environments and build output
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Secrets and machine-local configuration
+.env
+.env.*
+!.env.example
+config/local.yaml
+config/local.yml
+
+# Runtime data and databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+memory/
+conversations/
+user-data/
+
+# Logs, benchmarks, and temporary files
+*.log
+*.jsonl
+benchmarks/
+tmp/
+*.tmp
+
+# Downloaded/generated AI assets
+models/
+voices/
+audio/
+*.gguf
+*.safetensors
+*.onnx
+*.pt
+*.pth
+
+# Editor and operating-system files
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store

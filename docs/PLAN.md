@@ -262,6 +262,8 @@ Không có.
 
 ### Bước G0-02 — Tạo repository và cấu trúc tối thiểu
 
+- **Trạng thái:** Hoàn thành sau commit G0-02.
+
 Quy ước định danh bắt buộc:
 
 ```text
@@ -300,6 +302,13 @@ Tiêu chí hoàn thành:
 - Không có dữ liệu cá nhân trong staging.
 - Commit đầu tiên được tạo.
 - Remote GitHub chỉ thêm sau khi kiểm tra `.gitignore`.
+
+Kết quả:
+
+- Repository cục bộ và nhánh `main` hoạt động.
+- Cấu trúc tối thiểu, `.gitignore`, `pyproject.toml` và `LICENSE` đã có.
+- Python version, build backend và dependency được để lại cho G0-03.
+- Không có model, memory, secret, audio cá nhân hoặc runtime log trong staging.
 
 ### Bước G0-03 — Chốt môi trường Python
 
@@ -384,7 +393,7 @@ Tiêu chí:
 ### Definition of Done Giai đoạn 0
 
 - [x] Có baseline phần cứng.
-- [ ] Repo và `.gitignore` chuẩn.
+- [x] Repo và `.gitignore` chuẩn.
 - [ ] Python environment được khóa.
 - [ ] Storage layout được xác minh.
 - [ ] Config schema ban đầu.

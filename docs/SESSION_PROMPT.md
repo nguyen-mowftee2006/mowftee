@@ -119,10 +119,11 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Chốt các giai đoạn từ `v0.0.x` đến `v1.0.0`.
 - Chốt quy tắc dữ liệu, backup, logging và tool safety.
 - Chọn `/srv/mowftee/models/ollama/` làm đường dẫn model ưu tiên, chưa chốt cuối.
+- Tạo repository Git và cấu trúc tối thiểu của G0-02.
+- Tạo `.gitignore`, metadata project tối thiểu và `LICENSE` bảo lưu quyền.
 
 ### Chưa hoàn thành
 
-- Chưa tạo repo thật.
 - Chưa chốt Python version của project.
 - Chưa kiểm tra snapshot policy cho `@srv`.
 - Chưa cài Ollama.
@@ -139,19 +140,16 @@ Không chuyển giai đoạn nếu chưa đạt:
 
 ## Bước phải làm ngay
 
-`G0-02 — Tạo repository và cấu trúc tối thiểu`.
+`G0-03 — Chốt môi trường Python`.
 
-Hãy hướng dẫn từng lệnh nhỏ để:
+Trước khi tạo môi trường hoặc cài dependency:
 
-1. Tạo `$HOME/Projects/mowftee` với tên repository `mowftee`.
-2. Khởi tạo Git.
-3. Tạo cấu trúc tối thiểu, không tạo hàng loạt thư mục rỗng.
-4. Tạo `.gitignore` chuẩn.
-5. Copy bộ tài liệu hiện có vào repo.
-6. Kiểm tra `git status`.
-7. Tạo commit đầu tiên.
+1. Khảo sát compatibility của dependency dự kiến.
+2. Chọn và khóa Python version cho project.
+3. Chọn build backend và công cụ quản lý dependency.
+4. Hoàn thiện `pyproject.toml`.
 
-Chưa cài Ollama trong bước này. Chưa sửa README cho đến khi người dùng gửi link repository.
+Chưa cài Ollama hoặc tải model trong bước này.
 
 ## Cách trả lời
 

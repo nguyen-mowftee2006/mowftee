@@ -127,3 +127,36 @@ Tên Mowftee: **Đã chốt**.
 3. Kiểm tra cấu trúc repo.
 4. Viết lại README làm tài liệu dẫn đường.
 5. Tiếp tục bước `G0-02`.
+
+
+---
+
+## 2026-08-07 00:11 +07 — G0-02 Repository và cấu trúc tối thiểu
+
+### Mục tiêu
+
+Hoàn thiện cấu trúc repository tối thiểu mà chưa cài runtime, dependency hoặc tải model.
+
+### Thay đổi
+
+- Tạo `.gitignore` cho Python, secret, config cục bộ, dữ liệu runtime, log, audio và model.
+- Tạo `pyproject.toml` chỉ với metadata tối thiểu; chưa chốt Python version, build backend hoặc dependency.
+- Tạo package `src/mowftee` và các vị trí `prompts`, `tests`, `scripts` ở mức tối thiểu.
+- Tạo `LICENSE` với thông báo bảo lưu quyền; chưa cấp giấy phép mã nguồn mở.
+- Cập nhật trạng thái G0-02 trong tài liệu dự án.
+
+### Kiểm tra
+
+- Working tree ban đầu sạch và nhánh `main` đồng bộ với `origin/main`.
+- Không có model, memory, secret, audio cá nhân hoặc runtime log trong danh sách thay đổi.
+- `git diff --check` không báo lỗi whitespace.
+- Không sửa `README.md` hoặc `docs/SYSTEM_ARCHITECTURE.md`.
+
+### Điểm cần xử lý
+
+- Remote hiện có tên repository `bimatnhe`, chưa khớp định danh đã chốt `mowftee`; không tự đổi remote trong G0-02.
+- Python version và toolchain tiếp tục được chốt ở G0-03.
+
+### Trạng thái
+
+`G0-02`: **Hoàn thành sau khi commit các thay đổi này**.
