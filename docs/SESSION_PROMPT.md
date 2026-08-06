@@ -123,7 +123,10 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Chốt kiến trúc modular monolith.
 - Chốt các giai đoạn từ `v0.0.x` đến `v1.0.0`.
 - Chốt quy tắc dữ liệu, backup, logging và tool safety.
-- Chọn `/srv/mowftee/models/ollama/` làm đường dẫn model ưu tiên, chưa chốt cuối.
+- `/srv/mowftee/models/ollama/` là đường dẫn model cuối cùng đã được chốt ở G0-04.
+- `/srv/mowftee` và `/srv/mowftee/models` đã được tạo với `root:root 0755`.
+- Thư mục `/srv/mowftee/models/ollama` chưa được tạo.
+- Việc tạo thư mục này với `ollama:ollama 0750` được hoãn đến khi cài Ollama và user/group `ollama` tồn tại.
 - Tạo repository Git và cấu trúc tối thiểu của G0-02.
 - Tạo `.gitignore`, metadata project tối thiểu và `LICENSE` bảo lưu quyền.
 - Chốt môi trường G0-03 với CPython 3.11, `uv`, `.venv/` và `uv.lock`.
