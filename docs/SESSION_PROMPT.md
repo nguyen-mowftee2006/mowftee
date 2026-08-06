@@ -64,6 +64,9 @@ Phong cách tương tác của dự án lấy cảm hứng từ kiểu tương t
 - Không có tool shell tự do.
 - Module lỗi phải graceful degradation.
 - API AI chỉ bind local trong các giai đoạn đầu.
+- Project dùng CPython 3.11 (`>=3.11,<3.12`), do `uv` quản lý trong `.venv/`.
+- Python hệ thống 3.14.6 không được dùng để cài dependency project.
+- Dependency được khóa bằng `uv.lock`; setup dùng `uv sync --locked`.
 
 ## Bố trí dữ liệu dự kiến
 
@@ -121,10 +124,11 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Chọn `/srv/mowftee/models/ollama/` làm đường dẫn model ưu tiên, chưa chốt cuối.
 - Tạo repository Git và cấu trúc tối thiểu của G0-02.
 - Tạo `.gitignore`, metadata project tối thiểu và `LICENSE` bảo lưu quyền.
+- Chốt môi trường G0-03 với CPython 3.11, `uv`, `.venv/` và `uv.lock`.
+- Tạo `scripts/setup-python.sh`; kiểm tra lock, sync, import, pytest và Ruff đều đạt.
 
 ### Chưa hoàn thành
 
-- Chưa chốt Python version của project.
 - Chưa kiểm tra snapshot policy cho `@srv`.
 - Chưa cài Ollama.
 - Chưa benchmark model.
@@ -132,22 +136,21 @@ Không chuyển giai đoạn nếu chưa đạt:
 
 ### Sự cố đang mở
 
-1. Python hệ thống là 3.14.6; cần dùng môi trường project riêng và xác nhận compatibility.
-2. Micro mặc định đang mute; chỉ xử lý ở giai đoạn voice.
-3. Chưa biết `@srv` có được snapshot bởi cấu hình hiện tại hay không.
-4. Model path chưa được áp dụng.
-5. Không có backup ngoài ổ; cloud/GitHub chỉ bảo vệ phần phù hợp.
+1. Micro mặc định đang mute; chỉ xử lý ở giai đoạn voice.
+2. Chưa biết `@srv` có được snapshot bởi cấu hình hiện tại hay không.
+3. Model path chưa được áp dụng.
+4. Không có backup ngoài ổ; cloud/GitHub chỉ bảo vệ phần phù hợp.
 
 ## Bước phải làm ngay
 
-`G0-03 — Chốt môi trường Python`.
+`G0-04 — Chốt storage layout`.
 
-Trước khi tạo môi trường hoặc cài dependency:
+Trước khi tạo đường dẫn hoặc thay đổi quyền:
 
-1. Khảo sát compatibility của dependency dự kiến.
-2. Chọn và khóa Python version cho project.
-3. Chọn build backend và công cụ quản lý dependency.
-4. Hoàn thiện `pyproject.toml`.
+1. Kiểm tra snapshot policy cho `@`, `@home` và `@srv`.
+2. Xác minh quyền ghi dự kiến cho model path.
+3. Kiểm tra dung lượng trống.
+4. Quyết định có cần child subvolume riêng cho model hay không.
 
 Chưa cài Ollama hoặc tải model trong bước này.
 

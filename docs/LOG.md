@@ -183,3 +183,49 @@ Hoàn thiện cấu trúc repository tối thiểu mà chưa cài runtime, depen
 `G0-03 — Chốt môi trường Python`.
 
 G0-03 chưa được thực hiện trong entry này.
+
+
+---
+
+## 2026-08-07 00:27 +07 — G0-03 Môi trường Python
+
+### Mục tiêu
+
+Khóa môi trường Python riêng cho project, tách khỏi Python hệ thống của CachyOS.
+
+### Quyết định
+
+- Project dùng CPython 3.11 với `requires-python = ">=3.11,<3.12"`.
+- `uv` quản lý interpreter, dependency và virtual environment `.venv/`.
+- Python hệ thống 3.14.6 không được dùng để cài dependency project.
+- Hatchling build wheel từ `src/mowftee`.
+- Dependency khai báo trong `pyproject.toml`; `uv.lock` phải được commit.
+- Setup và khôi phục môi trường dùng `uv sync --locked`.
+
+### Thay đổi
+
+- Cập nhật `pyproject.toml` với build system, Python constraint và nhóm dev gồm pytest, Ruff.
+- Tạo `.python-version` với nội dung `3.11`.
+- Tạo `uv.lock` và `.venv/` bằng `uv`; `.venv/` không được Git theo dõi.
+- Tạo script idempotent `scripts/setup-python.sh`.
+- Thay placeholder bằng một smoke test import tại `tests/test_import.py`.
+
+### Kết quả kiểm thử
+
+- Interpreter project: CPython 3.11.15 trong `.venv/`.
+- `uv lock --check`: đạt.
+- `uv sync --locked`: đạt.
+- `uv run python --version`: Python 3.11.15.
+- Interpreter được xác nhận thuộc `.venv/`.
+- Import `mowftee`: đạt.
+- Pytest: 1 test đạt.
+- `uv run ruff check .`: đạt.
+- `scripts/setup-python.sh` chạy liên tiếp hai lần thành công và không sửa lock file.
+
+### Trạng thái
+
+`G0-03`: **Hoàn thành**.
+
+### Việc tiếp theo
+
+`G0-04 — Chốt storage layout`.

@@ -98,7 +98,17 @@ Mowftee là tên duy nhất được dùng cho sản phẩm và các định dan
 - Audio server: PipeWire 1.6.8
 - Session manager: WirePlumber 0.5.15
 - Python system: 3.14.6
+- Python project: CPython 3.11 (`>=3.11,<3.12`), managed by `uv`
 - Git: 2.55.0
+
+### Project Python environment
+
+- Interpreter và dependency của project do `uv` quản lý.
+- Virtual environment nằm tại `.venv/` trong repository và không được commit.
+- Python hệ thống 3.14.6 không được dùng để cài dependency project.
+- Dependency trực tiếp khai báo trong `pyproject.toml`; phiên bản resolve nằm trong `uv.lock` và phải được commit.
+- Build backend là Hatchling; wheel lấy package từ `src/mowftee`.
+- Tái tạo môi trường bằng `uv sync --locked` hoặc `scripts/setup-python.sh`.
 
 ---
 
@@ -503,9 +513,11 @@ health_check()
 ### DEC-008 — Python project tách khỏi Python hệ thống
 
 - **Context:** Python hệ thống là 3.14.6 trên rolling release.
-- **Decision:** Dùng môi trường project và khóa phiên bản.
-- **Reason:** Giảm rủi ro dependency.
-- **Final version:** Chưa chốt; xác nhận ở G0-03.
+- **Decision:** Dùng CPython 3.11 (`>=3.11,<3.12`) do `uv` quản lý trong `.venv/`; khóa dependency bằng `uv.lock` và sync bằng `uv sync --locked`.
+- **Build backend:** Hatchling với layout `src/mowftee`.
+- **Reason:** Tách project khỏi Python 3.14.6 của CachyOS rolling release và giữ compatibility rộng cho các module LLM, STT và TTS dự kiến.
+- **Validated with:** CPython 3.11.15, `uv lock --check`, locked sync, import smoke test, pytest và Ruff.
+- **Revisit when:** Dependency AI đã chọn yêu cầu Python khác hoặc CPython 3.11 hết thời gian hỗ trợ phù hợp với dự án.
 
 ---
 
@@ -535,7 +547,8 @@ health_check()
 Fresh OS
 → clone Git
 → run doctor
-→ setup environment
+→ install uv
+→ run `uv sync --locked`
 → download model manifest
 → restore private data
 → run migrations

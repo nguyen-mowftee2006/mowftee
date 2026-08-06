@@ -312,6 +312,8 @@ Kết quả:
 
 ### Bước G0-03 — Chốt môi trường Python
 
+- **Trạng thái:** Hoàn thành.
+
 Yêu cầu:
 
 - Không cài package AI trực tiếp vào Python hệ thống.
@@ -326,6 +328,15 @@ Yêu cầu:
 - Lock file.
 - Script `scripts/setup-python.sh`.
 - `python --version` trong venv được ghi log.
+
+Kết quả:
+
+- Project dùng CPython `>=3.11,<3.12`; môi trường thực tế được kiểm tra với Python 3.11.15.
+- `uv` quản lý interpreter, dependency và virtual environment `.venv/`.
+- Python hệ thống 3.14.6 không được dùng để cài dependency project.
+- Dependency khai báo trong `pyproject.toml`; `uv.lock` được commit.
+- Môi trường được tái tạo bằng `uv sync --locked` qua `scripts/setup-python.sh`.
+- `uv lock --check`, sync locked, import, pytest và Ruff đều đạt.
 
 ### Bước G0-04 — Chốt storage layout
 
@@ -394,7 +405,7 @@ Tiêu chí:
 
 - [x] Có baseline phần cứng.
 - [x] Repo và `.gitignore` chuẩn.
-- [ ] Python environment được khóa.
+- [x] Python environment được khóa.
 - [ ] Storage layout được xác minh.
 - [ ] Config schema ban đầu.
 - [ ] Logging hoạt động.
@@ -855,15 +866,14 @@ Snapshot cùng ổ không được coi là backup.
 
 ## 16. Việc cần làm tiếp theo
 
-**Bước hiện tại:** `G0-03 — Chốt môi trường Python`.
+**Bước hiện tại:** `G0-04 — Chốt storage layout`.
 
 Mục tiêu dự kiến:
 
-1. Khảo sát compatibility của các dependency dự kiến.
-2. Chọn và khóa phiên bản Python riêng cho project.
-3. Chọn công cụ quản lý môi trường và dependency.
-4. Hoàn thiện `pyproject.toml` và tạo lock file.
-5. Tạo `scripts/setup-python.sh`.
-6. Ghi nhận phiên bản Python thực tế trong môi trường project.
+1. Kiểm tra chính sách snapshot cho `@`, `@home` và `@srv`.
+2. Xác minh quyền ghi dự kiến của user và service Ollama.
+3. Kiểm tra dung lượng trống dành cho model.
+4. Quyết định có cần child subvolume riêng cho model hay không.
+5. Chốt đường dẫn model, memory và log.
 
-Các mục trên mới là kế hoạch; G0-03 chưa được thực hiện.
+Các mục trên mới là kế hoạch; G0-04 chưa được thực hiện.
