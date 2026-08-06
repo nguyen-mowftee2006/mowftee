@@ -107,6 +107,7 @@ Mowftee là tên duy nhất được dùng cho sản phẩm và các định dan
 - Virtual environment nằm tại `.venv/` trong repository và không được commit.
 - Python hệ thống 3.14.6 không được dùng để cài dependency project.
 - Dependency trực tiếp khai báo trong `pyproject.toml`; phiên bản resolve nằm trong `uv.lock` và phải được commit.
+- PyYAML là runtime dependency cho config YAML; phiên bản resolve hiện tại là 6.0.3 trong `uv.lock`.
 - Build backend là Hatchling; wheel lấy package từ `src/mowftee`.
 - Tái tạo môi trường bằng `uv sync --locked` hoặc `scripts/setup-python.sh`.
 
@@ -336,7 +337,7 @@ health_check()
 
 ### Not tracked
 
-- `config/local.yaml`
+- User `config.yaml` dưới XDG config path.
 - `.env`
 - Memory database.
 - Conversation archive.
@@ -389,9 +390,48 @@ health_check()
 
 ---
 
-## 13. Logging architecture
+## 13. Configuration and logging architecture
 
-### `app.jsonl`
+### 13.1 Configuration
+
+Nguồn cấu hình được merge theo precedence từ thấp đến cao:
+
+```text
+config/default.yaml
+→ ${XDG_CONFIG_HOME:-$HOME/.config}/mowftee/config.yaml
+→ MOWFTEE_ environment overrides
+→ CLI overrides dạng mapping
+```
+
+- `config/default.yaml` bắt buộc tồn tại và dùng `config_schema_version: 1`.
+- Build wheel force-include default YAML thành `mowftee/default.yaml`; loader ưu tiên file source và fallback sang package resource sau khi cài wheel.
+- `config/example.yaml` chỉ là tài liệu mẫu, không bao giờ được tự động load làm user config.
+- User config là tùy chọn; nếu tồn tại nhưng YAML hoặc giá trị sai thì phải báo `ConfigError`/`ConfigValidationError`, không silently fallback.
+- Nested environment key dùng hai dấu gạch dưới, ví dụ `MOWFTEE_LOGGING__LEVEL`; scalar được parse mà không dùng `eval`.
+- Merge và sanitize không mutate mapping đầu vào. Exception chỉ nêu path/field liên quan, không dump secret hoặc toàn bộ config.
+
+### 13.2 Logging
+
+Đường dẫn runtime:
+
+```text
+${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/logs/app.jsonl
+${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/logs/performance.jsonl
+${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/audit/audit.jsonl
+```
+
+Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timestamp`, `level`, `event`, `module`, `request_id`, `session_id`, `message`, `error_type`, `duration_ms`, `metadata`.
+
+- Timestamp là UTC ISO 8601; request ID là UUID được truyền qua `contextvars`.
+- Console và file output cấu hình độc lập; file dùng `RotatingFileHandler` chuẩn, mode `0600`, thư mục Mowftee mode `0700`.
+- Gọi setup nhiều lần thay thế handler do Mowftee quản lý, không nhân đôi record và không thay đổi root logger.
+- Key secret được lọc không phân biệt hoa thường, kể cả nested mapping, collection, URL query và exception metadata.
+- Giá trị header `Authorization`, `Cookie`, `Set-Cookie` bị che toàn bộ; chained YAML parser error không được giữ nếu có thể chứa nội dung config.
+- Prompt, conversation, file content và audio metadata bị chặn mặc định theo privacy flags.
+- Raw audio luôn bị chặn kể cả khi cho phép log audio metadata.
+- Nếu tạo file hoặc emit/rotation lỗi, kênh tương ứng fallback sang console và phát diagnostic ngắn, không làm ứng dụng crash.
+
+#### `app.jsonl`
 
 - Lifecycle.
 - State transition.
@@ -399,7 +439,7 @@ health_check()
 - Recovery.
 - Timeout.
 
-### `performance.jsonl`
+#### `performance.jsonl`
 
 - Model identifier.
 - Input/output tokens.
@@ -408,7 +448,7 @@ health_check()
 - Total duration.
 - RAM/VRAM/CPU/GPU.
 
-### `audit.jsonl`
+#### `audit.jsonl`
 
 - Tool ID.
 - Sanitized parameters.
@@ -534,9 +574,22 @@ health_check()
 - **Rollback:** Dừng ứng dụng/service, chuyển dữ liệu bằng công cụ bảo toàn metadata, cập nhật config rồi xác minh trước khi xóa đường dẫn cũ. Không xóa public model nếu chưa có xác nhận.
 - **Revisit when:** Bật snapshot cho `@srv`, thay đổi service account hoặc chuyển model sang filesystem khác.
 
+### DEC-010 — Layered YAML config và privacy-aware JSONL logging
+
+- **Context:** Modular monolith cần một nguồn cấu hình có thể tái tạo nhưng vẫn tách config riêng/secret khỏi Git, cùng logging đủ quan sát mà không mặc định ghi dữ liệu cá nhân.
+- **Decision:** Dùng PyYAML cho schema version 1 với precedence default → user config XDG → `MOWFTEE_` environment → CLI mapping; dùng ba kênh JSONL app/performance/audit dưới XDG state path.
+- **Validation:** Default config là bắt buộc; user config lỗi không bị bỏ qua; nested merge không mutate input; field sai được báo bằng exception riêng.
+- **Privacy:** Redact secret theo key, URL query và toàn bộ authorization/cookie header; prompt, conversation, file content và audio metadata mặc định không được ghi; raw audio luôn bị chặn.
+- **Reliability:** UUID request context dùng `contextvars`; rotation dùng thư viện chuẩn; file mode `0600`; setup idempotent và không thay đổi root logger.
+- **Fallback:** Lỗi tạo, ghi hoặc rotate file hạ cấp riêng kênh sang console với diagnostic ngắn thay vì làm crash ứng dụng.
+- **Validated with:** 39 pytest tests, Ruff, lock/sync check, config/logging smoke test trong XDG tạm và wheel-install smoke test.
+- **Revisit when:** Schema cần migration, logging chuyển sang collector bên ngoài hoặc privacy policy có yêu cầu phân loại dữ liệu mới.
+
 ---
 
 ## 16. Recovery architecture
+
+Backup/restore thực tế thuộc G0-06 và chưa được thực hiện.
 
 ### Có thể tải lại
 

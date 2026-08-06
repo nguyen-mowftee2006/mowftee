@@ -1,0 +1,26 @@
+# Copy the settings you want to override into:
+# ${XDG_CONFIG_HOME:-$HOME/.config}/mowftee/config.yaml
+# This example file is documentation only and is never loaded automatically.
+config_schema_version: 1
+
+app:
+  name: mowftee
+  environment: development
+
+paths:
+  # Public, downloadable Ollama models live outside the repository.
+  model_dir: /srv/mowftee/models/ollama
+
+logging:
+  level: INFO
+  console: true
+  file: true
+  max_bytes: 5242880
+  backup_count: 3
+
+privacy:
+  # Sensitive or personal content is not logged by default.
+  log_prompts: false
+  log_conversations: false
+  log_file_contents: false
+  log_audio_metadata: false

@@ -368,12 +368,15 @@ Kết quả:
 
 ### Bước G0-05 — Thiết lập cấu hình và logging
 
+- **Trạng thái:** Hoàn thành.
+
 Tạo:
 
 ```text
 config/default.yaml
 config/example.yaml
-config/model-manifest.yaml
+src/mowftee/config.py
+src/mowftee/logging_setup.py
 ```
 
 Log:
@@ -389,6 +392,16 @@ Tiêu chí:
 - Cấu hình sai phải báo lỗi rõ.
 - Secret không được ghi log.
 - Log có timestamp và request ID.
+
+Kết quả:
+
+- Schema cấu hình ban đầu dùng YAML với `config_schema_version: 1`; PyYAML là runtime dependency được khóa trong `uv.lock`.
+- Thứ tự ưu tiên là default → user config XDG → biến môi trường `MOWFTEE_` → CLI override.
+- Loader hỗ trợ nested merge, parse scalar từ biến môi trường, validation và exception riêng mà không ghi toàn bộ cấu hình.
+- Default YAML được đóng gói làm package resource để loader hoạt động cả từ source checkout và wheel đã cài.
+- Logging JSONL tách ba kênh app, performance và audit dưới XDG state path; có UTC timestamp, UUID request context, rotation và quyền file `0600`.
+- Secret và nội dung riêng tư bị redact mặc định; lỗi file handler hạ cấp sang console mà không làm ứng dụng crash.
+- Config/logging test và smoke test đều dùng XDG tạm; không tạo user config hoặc runtime log thật.
 
 ### Bước G0-06 — Thiết lập backup tối thiểu
 
@@ -419,8 +432,8 @@ Tiêu chí:
 - [x] Repo và `.gitignore` chuẩn.
 - [x] Python environment được khóa.
 - [x] Storage layout được xác minh.
-- [ ] Config schema ban đầu.
-- [ ] Logging hoạt động.
+- [x] Config schema ban đầu.
+- [x] Logging hoạt động.
 - [ ] Backup/restore thử thành công.
 - [ ] Commit và tag `v0.0.1`.
 
@@ -878,14 +891,14 @@ Snapshot cùng ổ không được coi là backup.
 
 ## 16. Việc cần làm tiếp theo
 
-**Bước hiện tại:** `G0-05 — Thiết lập cấu hình và logging`.
+**Bước hiện tại:** `G0-06 — Thiết lập backup tối thiểu`.
 
 Mục tiêu dự kiến:
 
-1. Tạo config mặc định và config mẫu không chứa secret.
-2. Chốt schema và validation cho cấu hình ban đầu.
-3. Thiết lập `app.jsonl`, `performance.jsonl` và `audit.jsonl`.
-4. Bảo đảm log có timestamp, request ID và không lộ secret.
-5. Kiểm thử lỗi cấu hình và quyền ghi state path.
+1. Chốt phạm vi dữ liệu bắt buộc và tùy chọn backup.
+2. Tạo script backup/restore tối thiểu, không tự tạo hoặc đọc memory database chưa tồn tại.
+3. Thiết kế backup SQLite nhất quán cho lúc database được triển khai.
+4. Thử restore vào thư mục tạm và xác minh quyền, cấu trúc, checksum.
+5. Ghi rõ target ngoài máy trước khi lưu archive thật.
 
-Các mục trên mới là kế hoạch; G0-05 chưa được thực hiện.
+Các mục trên mới là kế hoạch; G0-06 chưa được thực hiện.

@@ -8,7 +8,9 @@ version = "0.0.0"
 description = "Local-first Vietnamese AI companion for CachyOS/Linux"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
-dependencies = []
+dependencies = [
+    "pyyaml>=6.0.3",
+]
 
 [dependency-groups]
 dev = [
@@ -18,3 +20,6 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mowftee"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"config/default.yaml" = "mowftee/default.yaml"

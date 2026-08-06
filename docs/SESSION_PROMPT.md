@@ -67,6 +67,10 @@ Phong cách tương tác của dự án lấy cảm hứng từ kiểu tương t
 - Project dùng CPython 3.11 (`>=3.11,<3.12`), do `uv` quản lý trong `.venv/`.
 - Python hệ thống 3.14.6 không được dùng để cài dependency project.
 - Dependency được khóa bằng `uv.lock`; setup dùng `uv sync --locked`.
+- PyYAML là YAML runtime dependency, được `uv` khóa tại phiên bản đã resolve trong `uv.lock`.
+- Config schema ban đầu là version `1`; precedence là default → user config XDG → biến môi trường `MOWFTEE_` → CLI override dạng mapping.
+- Logging dùng JSONL, UUID request context và ba namespace app/performance/audit; secret cùng nội dung riêng tư bị redact mặc định.
+- Nếu không tạo/ghi/rotate được file log, logging fallback sang console và không làm ứng dụng crash.
 
 ## Bố trí dữ liệu đã chốt
 
@@ -82,6 +86,14 @@ $HOME/.cache/mowftee/                cache
 Các XDG path dùng biến môi trường với giá trị mặc định dưới `$HOME`, không hard-code user. `@srv` hiện không bị snapshot tự động và không cần child subvolume cho model. `/srv/mowftee/models/ollama/` chỉ được tạo với `ollama:ollama 0750` sau khi user/group Ollama tồn tại.
 
 Public model và cache không cần backup. Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy; triển khai backup thuộc G0-06.
+
+Config thật (tùy chọn) nằm tại `${XDG_CONFIG_HOME:-$HOME/.config}/mowftee/config.yaml`. Ba file log runtime là:
+
+```text
+${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/logs/app.jsonl
+${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/logs/performance.jsonl
+${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/audit/audit.jsonl
+```
 
 ## Quy tắc làm việc
 
@@ -133,12 +145,16 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Tạo `scripts/setup-python.sh`; kiểm tra lock, sync, import, pytest và Ruff đều đạt.
 - Chốt storage layout G0-04, tạo XDG directories `0700` và parent model path `root:root 0755`.
 - Xác nhận `@srv` không bị snapshot tự động; không tạo child subvolume model.
+- Hoàn thành G0-05 với config schema version 1, loader YAML có validation và precedence rõ ràng.
+- Hoàn thành JSONL logging app/performance/audit với request context, rotation, redaction và console fallback.
+- Kiểm tra G0-05 đạt 39 test, Ruff, lock/sync, hai smoke test dùng XDG tạm và wheel-install smoke test.
 
 ### Chưa hoàn thành
 
 - Chưa cài Ollama.
 - Chưa benchmark model.
 - Chưa chọn persona, STT, TTS hoặc avatar.
+- Chưa triển khai backup/restore của G0-06.
 
 ### Sự cố đang mở
 
@@ -148,16 +164,16 @@ Không chuyển giai đoạn nếu chưa đạt:
 
 ## Bước phải làm ngay
 
-`G0-05 — Thiết lập cấu hình và logging`.
+`G0-06 — Thiết lập backup tối thiểu`.
 
 Mục tiêu dự kiến:
 
-1. Tạo config mặc định và config mẫu.
-2. Chốt schema và validation ban đầu.
-3. Thiết lập app, performance và audit logging.
-4. Kiểm tra lỗi cấu hình và bảo vệ secret.
+1. Chốt phạm vi dữ liệu cần backup và target ngoài máy.
+2. Tạo script backup/restore tối thiểu.
+3. Chuẩn bị cơ chế backup SQLite nhất quán khi memory database tồn tại.
+4. Thử restore vào thư mục tạm và kiểm tra toàn vẹn.
 
-G0-05 chưa được thực hiện. Chưa cài Ollama hoặc tải model.
+G0-06 chưa được thực hiện. Chưa cài Ollama hoặc tải model.
 
 ## Cách trả lời
 

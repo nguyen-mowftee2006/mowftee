@@ -275,3 +275,87 @@ Khóa môi trường Python riêng cho project, tách khỏi Python hệ thống
 ### Việc tiếp theo
 
 `G0-05 — Thiết lập cấu hình và logging`.
+
+
+---
+
+## 2026-08-07 01:26 +07 — G0-05 Cấu hình và logging
+
+### CHECK
+
+- Nhánh `main` ban đầu sạch và đồng bộ với `origin/main` tại commit `0795092a188e71c03ca8c728d45084a85593b689`.
+- G0-04 đã hoàn thành; bước hiện tại khi bắt đầu là G0-05.
+- Project tiếp tục dùng CPython 3.11 do `uv` quản lý; không dùng Python hệ thống 3.14.6 cho dependency project.
+- XDG storage layout đã tồn tại; repo chưa có config loader hoặc logging implementation trùng chức năng.
+- Không có runtime config, JSONL log, secret hoặc cache được Git theo dõi.
+
+### Quyết định
+
+- Dùng PyYAML làm runtime dependency; `uv` resolve phiên bản 6.0.3 và cập nhật `pyproject.toml`, `uv.lock`.
+- Config precedence: `config/default.yaml` → user config tại `${XDG_CONFIG_HOME:-$HOME/.config}/mowftee/config.yaml` → biến môi trường `MOWFTEE_` → CLI override dạng mapping.
+- Schema ban đầu là `config_schema_version: 1`; user config là tùy chọn nhưng lỗi YAML/validation không bị silently ignored.
+- Log dùng JSONL UTF-8, tách app/performance/audit dưới `${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/`.
+- Dùng UUID và `contextvars` cho request context; dùng `RotatingFileHandler` chuẩn, file mode `0600`, thư mục Mowftee mode `0700`.
+- Secret và nội dung prompt, conversation, file, audio bị redact mặc định theo privacy policy. Nếu file handler lỗi, logging fallback sang console và báo ngắn gọn thay vì làm ứng dụng crash.
+
+### Thay đổi
+
+- Tạo `config/default.yaml`, `config/example.yaml`.
+- Tạo `src/mowftee/config.py`, `src/mowftee/logging_setup.py`.
+- Tạo `tests/test_config.py`, `tests/test_logging.py`.
+- Bổ sung ignore cho rotated JSONL log.
+- Không tạo user config thật, runtime log thật, memory database, Ollama runtime hoặc model.
+
+### Kết quả kiểm thử
+
+- `uv lock --check`: đạt.
+- `uv sync --locked`: đạt.
+- `uv run pytest`: 30 test đạt.
+- `uv run ruff check .`: đạt.
+- Config smoke test trong XDG tạm: schema version `1`.
+- Logging smoke test trong XDG tạm: tạo và parse được `app.jsonl`, có UTC timestamp, event, UUID request ID; secret mẫu không xuất hiện.
+- `git diff --check`: đạt; không có runtime config/log/cache được Git theo dõi và XDG thật không có file runtime mới.
+
+### Trạng thái
+
+`G0-05`: **Hoàn thành**.
+
+### Việc tiếp theo
+
+`G0-06 — Thiết lập backup tối thiểu`.
+
+G0-06 chưa được thực hiện trong entry này. Ollama chưa được cài và chưa tải model.
+
+
+---
+
+## 2026-08-07 01:42 +07 — G0-05 Hardening trước commit
+
+### Rà soát bổ sung
+
+Rà soát độc lập sau kết quả trung gian 30 test phát hiện bốn blocker trước commit:
+
+- Default YAML chưa được đóng gói vào wheel.
+- Raw PyYAML cause có thể giữ dòng config lỗi trong traceback.
+- Chuỗi authorization/cookie header có thể còn lộ phần credential.
+- Bật audio metadata có thể vô tình cho phép raw audio.
+
+Không có commit được tạo khi các blocker này còn tồn tại.
+
+### Khắc phục
+
+- Force-include `config/default.yaml` thành package resource `mowftee/default.yaml`; loader fallback sang resource khi chạy từ wheel.
+- Loại raw YAML parser cause khỏi exception public; sửa collision environment override có giá trị `null` và bỏ qua XDG base path tương đối.
+- Redact toàn bộ `Authorization`, `Cookie`, `Set-Cookie`; raw audio luôn bị chặn bất kể privacy flag metadata.
+- Bổ sung console fallback cho lỗi emit/rotation sau setup, đóng handler khi setup dở dang và bảo vệ cyclic metadata.
+
+### Kiểm tra cuối sau hardening
+
+- Pytest: **39 test đạt**; số này thay cho kết quả trung gian 30 test trong entry trước.
+- Ruff: đạt.
+- Wheel-install smoke test: build wheel, cài vào venv CPython 3.11 tạm, xác nhận package resource tồn tại và `load_config()` trả schema version `1`.
+- Không tạo artifact build trong repository; toàn bộ venv/XDG của smoke test nằm trong thư mục tạm và đã được xóa.
+
+### Trạng thái
+
+`G0-05`: **Hoàn thành sau hardening**. Bước tiếp theo vẫn là `G0-06 — Thiết lập backup tối thiểu`; G0-06 chưa được thực hiện.

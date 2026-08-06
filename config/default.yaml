@@ -1,0 +1,21 @@
+config_schema_version: 1
+
+app:
+  name: mowftee
+  environment: development
+
+paths:
+  model_dir: /srv/mowftee/models/ollama
+
+logging:
+  level: INFO
+  console: true
+  file: true
+  max_bytes: 5242880
+  backup_count: 3
+
+privacy:
+  log_prompts: false
+  log_conversations: false
+  log_file_contents: false
+  log_audio_metadata: false

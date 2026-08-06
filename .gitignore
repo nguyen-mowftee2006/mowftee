@@ -34,6 +34,7 @@ user-data/
 # Logs, benchmarks, and temporary files
 *.log
 *.jsonl
+*.jsonl.*
 benchmarks/
 tmp/
 *.tmp
