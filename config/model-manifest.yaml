@@ -1,0 +1,88 @@
+schema_version: 1
+status: proposed
+
+identity:
+  display_name: Mowftee
+  pronunciation: Maou-ph-ti
+  repository: mowftee
+  python_package: mowftee
+  cli_command: mowftee
+  systemd_service: mowftee.service
+  environment_prefix: MOWFTEE_
+
+application:
+  name: mowftee
+  version: 0.0.0
+  language: vi
+
+hardware_profile:
+  cpu: intel-core-i5-12500h
+  gpu: nvidia-rtx-3050-mobile-4gb
+  ram_gib: 16
+  storage_fs: btrfs
+
+llm:
+  enabled: false
+  provider: ollama
+  fallback_provider: llama_cpp_server
+  model: null
+  model_digest: null
+  quantization: null
+  context_length: 4096
+  temperature: null
+  storage_path: /srv/mowftee/models/ollama
+  selection_status: benchmark_required
+
+stt:
+  enabled: false
+  provider: null
+  model: null
+  execution_device: cpu
+  language: vi
+  selection_status: benchmark_required
+
+vad:
+  enabled: false
+  provider: null
+  selection_status: benchmark_required
+
+tts:
+  enabled: false
+  provider: null
+  model: null
+  voice: null
+  execution_device: cpu
+  selection_status: vietnamese_benchmark_required
+
+memory:
+  enabled: false
+  provider: sqlite
+  schema_version: 1
+  database_path: null
+  selection_policy: explicit_and_selective
+
+avatar:
+  enabled: false
+  provider: null
+  initial_target: pngtuber
+  advanced_target: live2d_or_vrm
+
+tools:
+  enabled: false
+  max_permission_level: L0
+  free_shell: false
+  audit_log: true
+
+runtime:
+  python_version: null
+  python_status: compatibility_check_required
+  bind_host: 127.0.0.1
+
+performance_targets:
+  llm_time_to_first_token_seconds: 4.0
+  llm_tokens_per_second: 10.0
+  initial_context_tokens: 4096
+  minimum_available_ram_gib: 3
+  text_stability_turns: 50
+  voice_total_perceived_latency_seconds: 4.0
+  barge_in_stop_latency_ms: 300
