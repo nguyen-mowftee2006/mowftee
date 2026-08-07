@@ -159,9 +159,8 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Chưa cài Ollama.
 - Chưa benchmark model.
 - Chưa chọn persona, STT, TTS hoặc avatar.
-- Chưa merge `wip/g0-06b-offmachine-backup` vào `main`.
-- Chưa tag `v0.0.1`.
-- Phase 0 chưa được đóng chính thức.
+- Nhánh `wip/g0-06b-offmachine-backup` đã được fast-forward merge vào `main`.
+- Phase 0 đã đạt Definition of Done và đang ở bước release closure `v0.0.1`.
 
 ### Sự cố đang mở
 

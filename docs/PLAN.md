@@ -461,7 +461,7 @@ Không backup bắt buộc:
 - [x] Logging hoạt động.
 - [x] G0-06A local encrypted backup/restore và restore test thành công.
 - [x] G0-06B backup ngoài máy được xác minh.
-- [ ] Commit và tag `v0.0.1`.
+- [x] Commit và tag `v0.0.1`.
 
 ---
 
