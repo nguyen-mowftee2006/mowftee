@@ -9,13 +9,13 @@ Dự án lấy cảm hứng từ cách tương tác của AI VTuber, nhưng khô
 
 ## Trạng thái hiện tại
 
-- **Giai đoạn:** `Giai đoạn 0 — Nền móng dự án` (Đã hoàn thành, đã phát hành release `v0.0.1`)
-- **Phiên bản phát triển hiện tại:** `0.1.0.dev0` (Giai đoạn 1)
-- **Đã hoàn thành:** khảo sát phần cứng, chốt kiến trúc, môi trường Python 3.11, storage layout, cấu hình/logging và backup local/off-machine (G0-06B)
-- **Chưa thực hiện:** cài Ollama, chọn/benchmark model, viết lõi hội thoại
-- **Bước tiếp theo:** `G1-01 — Cài runtime LLM`
-
-Repository hiện tại chưa cài Ollama runtime hoặc model. Lõi hội thoại chưa triển khai.
+- **Giai đoạn:** Phase 0 hoàn thành (release `v0.0.1`); hiện ở Phase 1 (`0.1.0.dev0`).
+- **G1-01 Complete:** Ollama + Vulkan runtime đã cài đặt và nghiệm thu thành công.
+- **G1-02 Complete:** Đã benchmark xong các mô hình ứng viên.
+  - Default Model: `qwen3:4b-instruct`
+  - Performance Fallback: `llama3.2:3b`
+- **Model Storage:** `/srv/mowftee/models/ollama/`
+- **Bước tiếp theo:** `G1-03 — Viết LLM Provider`
 
 ## Mục tiêu
 
@@ -124,13 +124,11 @@ Backup riêng
 
 Model công khai tải lại được không đưa vào Git. Memory, secret, audio cá nhân, log runtime và cấu hình riêng của máy cũng không được commit.
 
-Vị trí model dự kiến:
+Vị trí lưu trữ model:
 
 ```text
 /srv/mowftee/models/ollama/
 ```
-
-Vị trí này chỉ được chốt sau khi xác minh chính sách snapshot của subvolume Btrfs `@srv`.
 
 ## Nguyên tắc an toàn
 
@@ -151,8 +149,6 @@ Thực hiện một bước nhỏ
 → commit
 → chuyển bước tiếp theo
 ```
-
-Không cài Ollama hoặc chọn model trước khi hoàn thành phần nền móng của Giai đoạn 0.
 
 ---
 

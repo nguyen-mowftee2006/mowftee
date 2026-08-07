@@ -171,7 +171,7 @@ ${XDG_CACHE_HOME:-$HOME/.cache}/mowftee/         cache tạm
 - Snapshot trên cùng NVMe không phải backup.
 - Chưa cần tắt CoW cho SQLite.
 - `/srv/mowftee` và `/srv/mowftee/models` là `root:root 0755`.
-- `/srv/mowftee/models/ollama` được hoãn tạo đến bước cài runtime; owner cuối cùng là `ollama:ollama`, mode `0750`.
+- `/srv/mowftee/models/ollama` đã được tạo khi cài Ollama; owner `ollama:ollama`, mode `0750`.
 - XDG directories của Mowftee thuộc user hiện tại và dùng mode `0700`.
 
 ---
@@ -592,7 +592,7 @@ Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timest
 - **Snapshot:** `@srv` hiện không bị snapshot tự động; không tạo child subvolume model. Public model và cache không cần snapshot hoặc backup.
 - **Backup:** Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy. G0-06A đã triển khai local encrypted staging; G0-06B đã xác minh off-machine backup bằng full cloud round-trip qua Google Drive riêng tư. Conversation history là dữ liệu nhạy cảm và chỉ backup khi người dùng bật tùy chọn.
 - **Permissions:** XDG directories là `0700` của user; model directory cuối cùng là `ollama:ollama 0750`.
-- **Deferred action:** Chỉ tạo `/srv/mowftee/models/ollama` sau khi user/group Ollama tồn tại ở bước cài runtime.
+- **Completed action:** Thư mục `/srv/mowftee/models/ollama` đã được tạo với `ollama:ollama 0750` khi cài Ollama runtime ở G1-01.
 - **Rollback:** Dừng ứng dụng/service, chuyển dữ liệu bằng công cụ bảo toàn metadata, cập nhật config rồi xác minh trước khi xóa đường dẫn cũ. Không xóa public model nếu chưa có xác nhận.
 - **Revisit when:** Bật snapshot cho `@srv`, thay đổi service account hoặc chuyển model sang filesystem khác.
 

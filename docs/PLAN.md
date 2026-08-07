@@ -510,6 +510,7 @@ Rollback:
 - `qwen3:1.7b` (quantized 2.0B)
 - `llama3.2:3b` (quantized 3.2B)
 - `qwen3:4b-instruct` (quantized 4.0B)
+- *Lưu ý dọn dẹp:* Các mô hình thử nghiệm không còn sử dụng (`qwen3:0.6b`, `qwen3:1.7b`, `qwen3:4b`) đã được dọn dẹp khỏi Ollama runtime sau closure.
 
 ### Bước G1-03 — Viết LLM Provider
 

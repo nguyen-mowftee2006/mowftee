@@ -137,8 +137,7 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Chốt quy tắc dữ liệu, backup, logging và tool safety.
 - `/srv/mowftee/models/ollama/` là đường dẫn model cuối cùng đã được chốt ở G0-04.
 - `/srv/mowftee` và `/srv/mowftee/models` đã được tạo với `root:root 0755`.
-- Thư mục `/srv/mowftee/models/ollama` chưa được tạo.
-- Việc tạo thư mục này với `ollama:ollama 0750` được hoãn đến khi cài Ollama và user/group `ollama` tồn tại.
+- Thư mục `/srv/mowftee/models/ollama` đã được tạo với `ollama:ollama 0750` khi cài Ollama.
 - Tạo repository Git và cấu trúc tối thiểu của G0-02.
 - Tạo `.gitignore`, metadata project tối thiểu và `LICENSE` bảo lưu quyền.
 - Chốt môi trường G0-03 với CPython 3.11, `uv`, `.venv/` và `uv.lock`.
@@ -155,6 +154,7 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Quy trình G0-06B có local restore sanity test trước upload/xóa local copy để xác nhận passphrase và restore usability.
 - Hoàn thành G1-01: Cài đặt và nghiệm thu LLM runtime Ollama + Vulkan (native CachyOS 0.32.6-1.1), systemd service enabled/active, bind 127.0.0.1:11434, model path `/srv/mowftee/models/ollama` (0750), smoke model `qwen3:0.6b` (validation only) 100% GPU via Vulkan, boot persistence PASS.
 - Hoàn thành G1-02: Benchmark và lựa chọn mô hình LLM. Selected default: `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`, 4.0B); Performance fallback: `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`, 3.2B).
+- Post-cleanup G1-02: Đã dọn dẹp các mô hình thử nghiệm (`qwen3:0.6b`, `qwen3:1.7b`, `qwen3:4b`), thu hồi khoảng 4.4 GB dung lượng; hiện chỉ giữ `qwen3:4b-instruct` và `llama3.2:3b` trong hệ thống.
 
 - G1-01 & G1-02 COMPLETE; G1-03 LLM Provider là NEXT / NOT STARTED.
 

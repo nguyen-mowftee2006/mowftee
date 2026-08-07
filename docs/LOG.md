@@ -602,3 +602,33 @@ Benchmark các model ứng viên (`qwen3:1.7b`, `llama3.2:3b`, `qwen3:4b`/`qwen3
 ### Việc tiếp theo
 
 `G1-03 — Viết LLM Provider` (NEXT / NOT STARTED).
+---
+
+## 2026-08-08 02:40 +07 — Post G1-02 cleanup
+
+### Mục tiêu
+
+Dọn dẹp các mô hình thử nghiệm không còn sử dụng và các script tạm sau khi đóng milestone G1-02.
+
+### Quá trình thực hiện & Kết quả
+
+1. **Commit & Fast-forward Merge:**
+   - G1-02 đã đóng và ff-merge vào `main` tại commit `54ac3399de13ad5080870a0a7a817baeee847b8a`.
+2. **Model Removal:**
+   - Đã xóa qua Ollama CLI: `qwen3:0.6b`, `qwen3:1.7b`, `qwen3:4b`.
+   - Giữ lại: `qwen3:4b-instruct` (default) và `llama3.2:3b` (performance fallback).
+   - Dung lượng lưu trữ model: khoảng 8.9 GB → 4.5 GB (thu hồi khoảng 4.4 GB).
+3. **Scratch Cleanup:**
+   - File script tạm `/home/minhthanh/.gemini/antigravity-cli/brain/f1b3e300-23cf-4a7e-9d20-df99469aee03/scratch/run_quality_screen.py` đã được xóa.
+   - Thư mục `__pycache__` không tồn tại trong scratch.
+4. **Trạng thái Repo & Quyết định:**
+   - Working tree repository hoàn toàn sạch (`main...origin/main`).
+   - Việc dọn dẹp không làm thay đổi quyết định chọn mô hình LLM.
+
+### Trạng thái
+
+`Post G1-02 cleanup`: **Hoàn thành**.
+
+### Việc tiếp theo
+
+`G1-03 — Viết LLM Provider` (NEXT / NOT STARTED).
