@@ -152,6 +152,7 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Backup G0-06A có manifest, checksum nội bộ, ciphertext sidecar SHA-256, GPG AES-256, SQLite online backup và restore an toàn.
 - Kiểm tra G0-06A đạt Bash syntax, lock/sync, Ruff, 45 test backup, 84 full test, diff check và wheel smoke test.
 - Hoàn thành G0-06B bằng full cloud round-trip qua Google Drive riêng tư với archive `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`.
+- Quy trình G0-06B có local restore sanity test trước upload/xóa local copy để xác nhận passphrase và restore usability.
 - Hoàn thành G1-01: Cài đặt và nghiệm thu LLM runtime Ollama + Vulkan (native CachyOS 0.32.6-1.1), systemd service enabled/active, bind 127.0.0.1:11434, model path `/srv/mowftee/models/ollama` (0750), smoke model `qwen3:0.6b` (validation only) 100% GPU via Vulkan, boot persistence PASS.
 
 - G1-01 COMPLETE; G1-02 model benchmark là NEXT / NOT STARTED.
