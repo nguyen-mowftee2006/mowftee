@@ -20,10 +20,10 @@ Mowftee là tên duy nhất được dùng cho sản phẩm và các định dan
 
 - **Architecture status:** Proposed and partially validated
 - **Hardware baseline:** Validated
-- **LLM runtime:** Not installed
-- **Default model:** Not selected
+- **LLM runtime:** Installed & Validated (Ollama 0.32.6-1.1 + ollama-vulkan 0.32.6-1.1 via Vulkan backend on RTX 3050, systemd enabled/active, bind 127.0.0.1:11434)
+- **Default model:** Not selected (benchmark required)
 - **Voice stack:** Not selected
-- **Current project phase:** Giai đoạn 0 đã hoàn thành (release `v0.0.1`); hiện chuẩn bị Giai đoạn 1, bước tiếp theo là G1-01 — LLM Runtime
+- **Current project phase:** Giai đoạn 1; G1-01 Complete; bước tiếp theo là G1-02 — Benchmark model ứng viên
 
 ---
 
@@ -626,6 +626,21 @@ Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timest
   6. Không áp dụng dynamic versioning machinery (`setuptools-scm`, `hatch-vcs`) tại thời điểm hiện tại.
 - **Reason:** Đơn giản, explicit, ít phụ thuộc bên ngoài, dễ audit và hoàn toàn phù hợp với quy mô dự án hiện tại.
 - **Revisit when:** Dự án chuyển sang quy trình CI/CD tự động hoá release hoàn toàn.
+
+---
+
+### DEC-014 — Native CachyOS Ollama + Vulkan runtime setup
+
+- **Context:** Cần cài đặt và nghiệm thu LLM runtime local trên CachyOS, tận dụng RTX 3050 4GB VRAM.
+- **Decision:**
+  1. Cài hai CachyOS native packages: `ollama` (`0.32.6-1.1`) và `ollama-vulkan` (`0.32.6-1.1`).
+  2. Backend: Vulkan API (`vulkan-tools` verified Vulkan Instance 1.4.357, NVIDIA RTX 3050 Laptop GPU).
+  3. Service & Bind: `ollama.service` (`ollama:ollama`), `enabled` và `active`, bind loopback local-only `127.0.0.1:11434`.
+  4. Model Storage: `/srv/mowftee/models/ollama` (`ollama:ollama 0750`) trên subvolume `/@srv`.
+  5. Validation Smoke Model: `qwen3:0.6b` (digest `7df6b6e09427`, 522 MB) chạy 100% GPU via Vulkan để smoke test; KHÔNG đại diện cho default/winner model của Mowftee.
+  6. Persistence: Boot persistence được xác minh thành công qua post-reboot final gate test.
+- **Reason:** Ưu tiên package lifecycle native CachyOS, tránh dependency CUDA toolkit không cần thiết ở G1-01, giữ model storage tách biệt và API localhost-only; Vulkan/RTX 3050 đã được operationally validated.
+- **Revisit when:** Thay đổi GPU backend hoặc cập nhật lớn của CachyOS packages.
 
 ---
 

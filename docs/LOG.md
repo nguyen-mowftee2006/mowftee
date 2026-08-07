@@ -511,3 +511,44 @@ Local restore sanity test:
 ### Trạng thái
 
 Task metadata sync: Pre-G1 metadata sync đã hoàn thành và được commit; G1-01 là bước tiếp theo và chưa bắt đầu.
+
+
+---
+
+## 2026-08-08 00:41 +07 — G1-01 Cài đặt và nghiệm thu runtime LLM (Ollama + Vulkan)
+
+### Mục tiêu
+
+Cài đặt runtime Ollama trên CachyOS, cấu hình GPU Vulkan, lưu mô hình tại `/srv/mowftee/models/ollama`, chỉ bind loopback local, và kiểm tra persistence sau khi reboot.
+
+### Quá trình thực hiện & Các sự cố đã xử lý
+
+1. **Vulkan Verification & Dependency Setup:**
+   - Operator cài `vulkan-tools`. `vulkaninfo --summary` xác nhận Instance Version 1.4.357 và nhận dạng `NVIDIA GeForce RTX 3050 Laptop GPU`.
+2. **Mirror Recovery & Package Installation:**
+   - Ban đầu gặp lỗi mirror 404. Operator chạy `sudo cachyos-rate-mirrors` và `sudo pacman -Syu` thành công.
+   - Cài đặt hai CachyOS native packages: `ollama` (`0.32.6-1.1`) và `ollama-vulkan` (`0.32.6-1.1`).
+3. **Storage & Service Configuration:**
+   - Thư mục `/srv/mowftee/models/ollama` được chown `ollama:ollama 0750` trên subvolume `/@srv`.
+   - Override systemd service: `OLLAMA_MODELS=/srv/mowftee/models/ollama`, `OLLAMA_HOST=127.0.0.1:11434`.
+   - `systemctl enable` và `systemctl start` dịch vụ `ollama`.
+4. **Smoke Model & Inference Gate:**
+   - Pulled smoke model `qwen3:0.6b` (digest `7df6b6e09427`, 522 MB).
+   - *Lưu ý:* `qwen3:0.6b` chỉ là validation model để nghiệm thu pipeline runtime/GPU, KHÔNG phải default model hay winner model của Mowftee.
+   - Inference PASS (`ollama ps` = `100% GPU`, Vulkan backend trên RTX 3050).
+5. **Post-Reboot Final Gate:**
+   - Reboot máy thật và kiểm tra:
+     - `systemctl is-enabled`: `enabled`
+     - `systemctl is-active`: `active` (tự khởi động sau boot)
+     - `127.0.0.1:11434` bind: PASS (localhost-only)
+     - API `/api/version`: `0.32.6`
+     - Inference sau reboot: PASS (`100% GPU`, Vulkan0 compute buffer 30.01 MiB)
+     - Persistence đường dẫn `/srv/mowftee/models/ollama`: PASS
+
+### Trạng thái
+
+`G1-01`: **Hoàn thành**.
+
+### Việc tiếp theo
+
+`G1-02 — Benchmark model ứng viên` (NEXT / NOT STARTED).

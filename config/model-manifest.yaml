@@ -33,7 +33,7 @@ llm:
   storage_path: /srv/mowftee/models/ollama
   storage_layout_status: finalized
   storage_parent_status: created
-  storage_directory_status: deferred_until_ollama_install
+  storage_directory_status: created
   storage_owner: ollama
   storage_group: ollama
   storage_mode: "0750"

@@ -4,7 +4,7 @@
 
 - **Dự án:** Mowftee
 - **Nền tảng chính:** CachyOS, Hyprland, Btrfs
-- **Trạng thái:** Giai đoạn 0 đã hoàn thành (release `v0.0.1`); chưa cài runtime LLM
+- **Trạng thái:** Giai đoạn 0 hoàn thành (`v0.0.1`); G1-01 hoàn thành; G1-02 model benchmark là NEXT
 - **Mục tiêu release:** `v1.0.0`
 - **Ngôn ngữ tương tác chính:** Tiếng Việt
 - **Nguyên tắc:** Hoàn thành, kiểm thử, ghi log và commit từng bước trước khi chuyển tiếp
@@ -473,7 +473,13 @@ Chat local trong terminal, streaming, giữ ngữ cảnh trong phiên và có be
 
 ### Bước G1-01 — Cài runtime LLM
 
-Ứng viên mặc định: Ollama.
+- **Trạng thái:** Hoàn thành.
+- **Packages:** `ollama` 0.32.6-1.1 + `ollama-vulkan` 0.32.6-1.1 (CachyOS native).
+- **Backend/GPU:** Vulkan trên RTX 3050 Laptop 4GB.
+- **Service:** `ollama.service` (`ollama:ollama`), `enabled` và `active`, boot persistence PASS.
+- **Bind:** `127.0.0.1:11434` (localhost-only).
+- **Model Storage:** `/srv/mowftee/models/ollama` (`ollama:ollama 0750`).
+- **Validation Model:** `qwen3:0.6b` (digest `7df6b6e09427`, 522 MB) chạy 100% GPU via Vulkan (smoke test validation only, KHÔNG phải default/winner model).
 
 Kiểm tra:
 
@@ -491,6 +497,8 @@ Rollback:
 - Không xóa model nếu người dùng chưa xác nhận.
 
 ### Bước G1-02 — Benchmark model ứng viên
+
+- **Trạng thái:** Tiếp theo (NEXT / NOT STARTED).
 
 Ứng viên ban đầu:
 

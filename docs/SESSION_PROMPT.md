@@ -48,7 +48,7 @@ Phong cách tương tác của dự án lấy cảm hứng từ kiểu tương t
 - Python hệ thống 3.14.6.
 - Git 2.55.0.
 - NVIDIA driver 610.57.04, CUDA UMD 13.3.
-- Ollama chưa được cài.
+- Ollama 0.32.6-1.1 + ollama-vulkan 0.32.6-1.1 (native CachyOS) đã cài, Vulkan backend trên RTX 3050, systemd service enabled/active, bind 127.0.0.1:11434.
 - Micro mặc định tồn tại nhưng đang mute trong baseline.
 
 ## Kiến trúc đã chốt
@@ -83,7 +83,7 @@ $HOME/.cache/mowftee/                cache
 /srv/mowftee/models/ollama/          model tải lại được
 ```
 
-Các XDG path dùng biến môi trường với giá trị mặc định dưới `$HOME`, không hard-code user. `@srv` hiện không bị snapshot tự động và không cần child subvolume cho model. `/srv/mowftee/models/ollama/` chỉ được tạo với `ollama:ollama 0750` sau khi user/group Ollama tồn tại.
+Các XDG path dùng biến môi trường với giá trị mặc định dưới `$HOME`, không hard-code user. `@srv` hiện không bị snapshot tự động và không cần child subvolume cho model. `/srv/mowftee/models/ollama/` đã được tạo với owner `ollama:ollama 0750`.
 
 Public model và cache không cần backup. Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy; triển khai backup thuộc G0-06.
 
@@ -152,34 +152,32 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Backup G0-06A có manifest, checksum nội bộ, ciphertext sidecar SHA-256, GPG AES-256, SQLite online backup và restore an toàn.
 - Kiểm tra G0-06A đạt Bash syntax, lock/sync, Ruff, 45 test backup, 84 full test, diff check và wheel smoke test.
 - Hoàn thành G0-06B bằng full cloud round-trip qua Google Drive riêng tư với archive `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`.
-- Quy trình G0-06B có local restore sanity test trước upload/xóa local copy để xác nhận passphrase và restore usability.
+- Hoàn thành G1-01: Cài đặt và nghiệm thu LLM runtime Ollama + Vulkan (native CachyOS 0.32.6-1.1), systemd service enabled/active, bind 127.0.0.1:11434, model path `/srv/mowftee/models/ollama` (0750), smoke model `qwen3:0.6b` (validation only) 100% GPU via Vulkan, boot persistence PASS.
 
-- Pre-G1 metadata sync COMPLETE (commit `f97a7d7`); G1-01 NEXT / NOT STARTED; Ollama chưa cài; model chưa tải/benchmark.
+- G1-01 COMPLETE; G1-02 model benchmark là NEXT / NOT STARTED.
 
 ### Chưa hoàn thành
 
-- Chưa cài Ollama (G1-01: NEXT / NOT STARTED).
-- Chưa benchmark model.
+- G1-02: Benchmark model ứng viên (NEXT / NOT STARTED).
 - Chưa chọn persona, STT, TTS hoặc avatar.
 - Phase 0 đã hoàn thành và đóng release `v0.0.1` tại commit `794ba78`.
-- Hiện đang ở đầu Phase 1 với version phát triển `0.1.0.dev0`.
+- Hiện đang ở Phase 1 với version phát triển `0.1.0.dev0`.
 
 ### Sự cố đang mở
 
 1. Micro mặc định đang mute; chỉ xử lý ở giai đoạn voice.
-2. Thư mục `/srv/mowftee/models/ollama` và owner `ollama:ollama` được hoãn đến khi cài runtime.
-3. Off-machine backup đã được xác minh qua Google Drive riêng tư; archive vòng đầu mất passphrase vẫn còn là housekeeping cần dọn.
+2. Off-machine backup đã được xác minh qua Google Drive riêng tư; archive vòng đầu mất passphrase vẫn còn là housekeeping cần dọn.
 
 ## Bước phải làm ngay
 
 Phase 0 đã hoàn thành và release `v0.0.1` đã đóng.
-Task Pre-G1 metadata sync COMPLETE (commit `f97a7d7`).
+G1-01 runtime closure COMPLETE.
 
 Bước tiếp theo:
 
-G1-01 — Cài runtime LLM (Ollama) (NEXT / NOT STARTED).
+G1-02 — Benchmark model ứng viên (NEXT / NOT STARTED).
 
-Chưa cài Ollama hoặc tải model ở thời điểm này.
+Chưa tải/chọn model ứng viên cho G1-02; qwen3:0.6b hiện chỉ là smoke/validation model. G1-02 chưa bắt đầu.
 
 ## Cách trả lời
 
