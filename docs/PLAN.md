@@ -420,7 +420,9 @@ G0-06 được chia thành hai phần:
 
 #### G0-06B — Backup ngoài máy
 
-- **Trạng thái:** Chưa thực hiện.
+- **Trạng thái:** Hoàn thành.
+- Google Drive riêng tư được dùng làm off-machine target.
+- Full round-trip đã được xác minh với archive `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`: production backup → checksum → local restore sanity test → upload → xóa local original → download → checksum → restore → đối chiếu config.
 - Chọn target cloud hoặc thiết bị ngoài máy.
 - Upload archive mã hóa và sidecar checksum.
 - Xác minh tải xuống và restore từ target ngoài máy.
@@ -458,7 +460,7 @@ Không backup bắt buộc:
 - [x] Config schema ban đầu.
 - [x] Logging hoạt động.
 - [x] G0-06A local encrypted backup/restore và restore test thành công.
-- [ ] G0-06B backup ngoài máy được xác minh.
+- [x] G0-06B backup ngoài máy được xác minh.
 - [ ] Commit và tag `v0.0.1`.
 
 ---
@@ -915,7 +917,7 @@ Snapshot cùng ổ không được coi là backup.
 
 ## 16. Việc cần làm tiếp theo
 
-**Bước hiện tại:** `G0-06B — Xác minh backup ngoài máy`.
+**Bước hiện tại:** `G0-06` đã hoàn thành về mặt kỹ thuật và operational validation.
 
 G0-06A đã hoàn thành trên nhánh `wip/g0-06a-backup` với local encrypted backup/restore tooling, kiểm tra toàn vẹn, SQLite online backup và restore an toàn.
 

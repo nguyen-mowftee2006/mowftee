@@ -568,7 +568,7 @@ Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timest
 - **Context:** Source, dữ liệu cá nhân và public model có yêu cầu quyền, snapshot và backup khác nhau.
 - **Decision:** Dùng XDG paths portable cho config/data/state/cache; public Ollama model nằm tại `/srv/mowftee/models/ollama` trên `@srv`.
 - **Snapshot:** `@srv` hiện không bị snapshot tự động; không tạo child subvolume model. Public model và cache không cần snapshot hoặc backup.
-- **Backup:** Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy. G0-06A đã triển khai local encrypted staging; G0-06B vẫn phải xác minh target ngoài máy. Conversation history là dữ liệu nhạy cảm và chỉ backup khi người dùng bật tùy chọn.
+- **Backup:** Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy. G0-06A đã triển khai local encrypted staging; G0-06B đã xác minh off-machine backup bằng full cloud round-trip qua Google Drive riêng tư. Conversation history là dữ liệu nhạy cảm và chỉ backup khi người dùng bật tùy chọn.
 - **Permissions:** XDG directories là `0700` của user; model directory cuối cùng là `ollama:ollama 0750`.
 - **Deferred action:** Chỉ tạo `/srv/mowftee/models/ollama` sau khi user/group Ollama tồn tại ở bước cài runtime.
 - **Rollback:** Dừng ứng dụng/service, chuyển dữ liệu bằng công cụ bảo toàn metadata, cập nhật config rồi xác minh trước khi xóa đường dẫn cũ. Không xóa public model nếu chưa có xác nhận.
@@ -594,15 +594,31 @@ Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timest
 - **SQLite:** Database đang mở được snapshot bằng `sqlite3.Connection.backup()`; không sao chép mù file SQLite đang ghi.
 - **Restore safety:** Xác minh sidecar, giải mã vào vùng tạm, từ chối path traversal, symlink và special file, kiểm tra manifest/checksum rồi mới publish destination.
 - **Privacy:** Manifest không chứa hostname, username hoặc absolute source path.
-- **Status:** Archive G0-06A được đánh dấu `local_staging`; archive nằm trên cùng máy chưa phải backup ngoài máy.
+- **Status:** Archive G0-06A được đánh dấu `local_staging`; archive nằm trên cùng máy chưa phải backup ngoài máy. G0-06B đã xác minh off-machine backup thật qua Google Drive riêng tư.
 - **Validation:** Bash syntax, `uv lock --check`, locked sync, Ruff, 45 backup tests, 84 full tests, diff check và wheel smoke test đều đạt.
-- **Deferred:** G0-06B chọn target ngoài máy, upload, tải lại và thử restore từ target đó.
+- **Status:** G0-06B đã hoàn thành full off-machine cloud round-trip và restore validation.
 
 ---
 
+### DEC-012 — Off-machine backup target và cloud round-trip validation
+
+- **Context:** Local encrypted staging trên cùng máy/NVMe không phải off-machine backup.
+- **Decision:** G0-06B sử dụng Google Drive riêng tư làm off-machine target.
+- **Transfer:** upload/download thủ công qua trình duyệt; không dùng Drive API, rclone, OAuth integration, cloud SDK hoặc daemon sync.
+- **Không phải off-machine backup:** Btrfs snapshot, directory/partition khác cùng máy hoặc cùng NVMe, repository, GitHub source code và local staging.
+- **Encryption:** production archive dùng GPG symmetric AES-256.
+- **Passphrase:** đi qua pinentry/gpg-agent; không lưu trong CLI, env, config, Git, log hoặc cloud.
+- **Integrity:** ciphertext đi kèm outer SHA-256 sidecar.
+- **Validation:** production backup → checksum → local restore sanity test → upload → xóa local original → download → checksum → restore vào temporary destination → đối chiếu restored data.
+- **Validated archive:** `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`.
+- **Process improvement:** local restore sanity test được thực hiện trước upload và trước khi xóa local copy để xác nhận passphrase và restore usability.
+- **SQLite:** operational validation được skip vì `mowftee.sqlite3` chưa tồn tại trong dữ liệu thật hiện tại; không tính là failure.
+
 ## 16. Recovery architecture
 
-Local encrypted backup/restore đã được triển khai ở G0-06A. Backup ngoài máy và restore từ target ngoài máy thuộc G0-06B, hiện chưa được thực hiện.
+Local encrypted backup/restore đã được triển khai ở G0-06A.
+
+Backup ngoài máy đã được xác minh ở G0-06B bằng full cloud round-trip qua Google Drive riêng tư.
 
 ### Có thể tải lại
 

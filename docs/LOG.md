@@ -404,3 +404,77 @@ Không có commit được tạo khi các blocker này còn tồn tại.
 Archive hiện chỉ là local encrypted staging. `G0-06B — Backup ngoài máy` chưa được thực hiện.
 
 Không merge `main`, không push commit đóng bước, không tag `v0.0.1`, không cài Ollama và không tải model trong G0-06A.
+
+---
+
+## 2026-08-07 — Correction: G0-06A push status
+
+Commit `121ebbf` (`docs: close G0-06A backup milestone`) sau đó đã được push lên `origin/wip/g0-06a-backup`.
+
+Entry lịch sử cũ không bị sửa lại.
+
+---
+
+## 2026-08-07 — G0-06B: Xác minh backup ngoài máy qua Google Drive
+
+### Target
+
+- Google Drive riêng tư.
+- Upload/download thủ công qua trình duyệt.
+- Không dùng Drive API, rclone, OAuth integration, cloud SDK hoặc daemon sync.
+
+### Vòng validation đầu
+
+- Production backup attempt #1 thất bại do operator nhập sai bước xác nhận passphrase; staging sau fail sạch.
+- Attempt #2 thành công.
+- Archive: `mowftee-backup-20260807T054900Z-1bfb0426.tar.gz.gpg`.
+- Local postcheck và outer SHA-256: PASS.
+- Upload Drive, xóa local, tải lại, outer SHA-256 sau download: PASS.
+- Restore không hoàn thành vì operator không còn khả năng truy cập production passphrase.
+- Ciphertext integrity được xác minh bằng SHA-256; archive này được xem là stale/unusable backup.
+- Không bypass hoặc brute-force GPG.
+
+### Recovery
+
+- Operator tạo passphrase mới và xác nhận đã lưu an toàn trong password manager.
+- Production backup mới thành công:
+  `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`
+- Exact pair, permission, no plaintext, no `.partial`, outer SHA-256: PASS.
+
+### Cải tiến quy trình
+
+Sau production backup và checksum PASS, thêm local restore sanity test trước upload và trước khi xóa local copy để xác nhận passphrase và restore usability.
+
+Local restore sanity test:
+
+- restore exit 0;
+- restored `config/mowftee/config.yaml`;
+- `cmp` với config thật: PASS;
+- thư mục verify tạm đã được dọn.
+
+### Cloud round-trip cuối
+
+- Upload archive + sidecar lên Google Drive: PASS.
+- Xóa local original pair: PASS.
+- Download lại từ Drive: PASS.
+- Permission download đưa về `0600`.
+- Outer SHA-256 sau download: PASS.
+- Restore bản download vào `/tmp/mowftee-g0-06b-restore`: exit 0.
+- Đối chiếu restored config với source bằng `cmp`: PASS.
+
+### SQLite
+
+`~/.local/share/mowftee/memory/mowftee.sqlite3` chưa tồn tại nên SQLite operational validation được SKIP và không tính là failure.
+
+### Kết luận
+
+- `G0-06A`: Hoàn thành.
+- `G0-06B`: Hoàn thành.
+- `G0-06`: Hoàn thành về mặt kỹ thuật và operational validation.
+- Phase 0 chưa được đóng chính thức.
+- Nhánh `wip/g0-06b-offmachine-backup` chưa merge, chưa push, chưa tag `v0.0.1`.
+
+### Housekeeping
+
+- Có thể dọn archive vòng đầu `...1bfb0426...` trên Google Drive.
+- Có thể dọn `/tmp/mowftee-g0-06b-restore` khi không còn cần giữ evidence.

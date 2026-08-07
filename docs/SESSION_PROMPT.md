@@ -151,34 +151,31 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Hoàn thành G0-06A local encrypted backup/restore tooling trên nhánh `wip/g0-06a-backup`.
 - Backup G0-06A có manifest, checksum nội bộ, ciphertext sidecar SHA-256, GPG AES-256, SQLite online backup và restore an toàn.
 - Kiểm tra G0-06A đạt Bash syntax, lock/sync, Ruff, 45 test backup, 84 full test, diff check và wheel smoke test.
+- Hoàn thành G0-06B bằng full cloud round-trip qua Google Drive riêng tư với archive `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`.
+- Quy trình G0-06B có local restore sanity test trước upload/xóa local copy để xác nhận passphrase và restore usability.
 
 ### Chưa hoàn thành
 
 - Chưa cài Ollama.
 - Chưa benchmark model.
 - Chưa chọn persona, STT, TTS hoặc avatar.
-- Chưa thực hiện G0-06B và chưa có backup đã xác minh ngoài máy.
+- Chưa merge `wip/g0-06b-offmachine-backup` vào `main`.
+- Chưa tag `v0.0.1`.
+- Phase 0 chưa được đóng chính thức.
 
 ### Sự cố đang mở
 
 1. Micro mặc định đang mute; chỉ xử lý ở giai đoạn voice.
 2. Thư mục `/srv/mowftee/models/ollama` và owner `ollama:ollama` được hoãn đến khi cài runtime.
-3. Không có backup ngoài ổ; cloud/GitHub chỉ bảo vệ phần phù hợp.
+3. Off-machine backup đã được xác minh qua Google Drive riêng tư; archive vòng đầu mất passphrase vẫn còn là housekeeping cần dọn.
 
 ## Bước phải làm ngay
 
-`G0-06B — Xác minh backup ngoài máy`.
+G0-06A và G0-06B đều đã hoàn thành. Không viết lại backup tooling nếu không phát hiện lỗi thật sự.
 
-G0-06A đã hoàn thành. Không viết lại backup tooling và không mở rộng G0-06A nếu không phát hiện lỗi thật sự.
+Bước tiếp theo là review toàn bộ Definition of Done của Phase 0 và đồng bộ các tài liệu/project metadata còn lại trước khi quyết định merge/tag.
 
-Mục tiêu G0-06B:
-
-1. Chọn target cloud hoặc thiết bị thực sự nằm ngoài máy.
-2. Upload archive mã hóa cùng sidecar SHA-256.
-3. Tải lại archive từ target ngoài máy.
-4. Restore vào thư mục tạm và xác minh toàn vẹn.
-
-G0-06B chưa được thực hiện. Chưa cài Ollama hoặc tải model.
+Chưa cài Ollama hoặc tải model.
 
 ## Cách trả lời
 
