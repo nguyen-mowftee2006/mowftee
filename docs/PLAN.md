@@ -405,26 +405,49 @@ Kết quả:
 
 ### Bước G0-06 — Thiết lập backup tối thiểu
 
-Backup bắt buộc:
+G0-06 được chia thành hai phần:
+
+#### G0-06A — Local encrypted backup/restore tooling
+
+- **Trạng thái:** Hoàn thành trên nhánh `wip/g0-06a-backup`.
+- Tạo `scripts/backup.sh`, `scripts/restore.sh` và `src/mowftee/backup.py`.
+- Archive dùng tar gzip, mã hóa đối xứng GPG AES-256 và có sidecar SHA-256.
+- Manifest và checksum nội bộ dùng để xác minh payload trước khi restore.
+- SQLite được snapshot nhất quán bằng `sqlite3.Connection.backup()`.
+- Restore chỉ cho phép đích mới, kiểm tra path traversal, loại file nguy hiểm và checksum.
+- Archive hiện chỉ có trạng thái `local_staging`; chưa được coi là backup ngoài máy.
+- Kiểm tra đạt: Bash syntax, lock/sync, Ruff, 45 test backup, 84 full test, diff check và wheel smoke test.
+
+#### G0-06B — Backup ngoài máy
+
+- **Trạng thái:** Chưa thực hiện.
+- Chọn target cloud hoặc thiết bị ngoài máy.
+- Upload archive mã hóa và sidecar checksum.
+- Xác minh tải xuống và restore từ target ngoài máy.
+- Snapshot Btrfs hoặc archive nằm cùng NVMe không được coi là backup ngoài máy.
+
+Backup bắt buộc khi dữ liệu tồn tại:
 
 - Config thật.
 - Persona.
 - Memory.
 - Voice/model tự tạo.
+- LoRA tự tạo.
 - Tài liệu RAG riêng.
+
+Backup tùy chọn:
+
+- Conversation history.
+- Audit log.
+- Benchmark quan trọng.
 
 Không backup bắt buộc:
 
 - Model Ollama công khai.
 - Cache.
+- Runtime log thông thường.
 - Audio tạm.
-
-Tiêu chí:
-
-- Có `backup.sh`.
-- Có `restore.sh`.
-- Restore thử vào thư mục tạm thành công.
-- Backup SQLite dùng cơ chế nhất quán, không sao chép mù khi database đang ghi.
+- Source code đã có trên GitHub.
 
 ### Definition of Done Giai đoạn 0
 
@@ -434,7 +457,8 @@ Tiêu chí:
 - [x] Storage layout được xác minh.
 - [x] Config schema ban đầu.
 - [x] Logging hoạt động.
-- [ ] Backup/restore thử thành công.
+- [x] G0-06A local encrypted backup/restore và restore test thành công.
+- [ ] G0-06B backup ngoài máy được xác minh.
 - [ ] Commit và tag `v0.0.1`.
 
 ---
@@ -891,14 +915,16 @@ Snapshot cùng ổ không được coi là backup.
 
 ## 16. Việc cần làm tiếp theo
 
-**Bước hiện tại:** `G0-06 — Thiết lập backup tối thiểu`.
+**Bước hiện tại:** `G0-06B — Xác minh backup ngoài máy`.
 
-Mục tiêu dự kiến:
+G0-06A đã hoàn thành trên nhánh `wip/g0-06a-backup` với local encrypted backup/restore tooling, kiểm tra toàn vẹn, SQLite online backup và restore an toàn.
 
-1. Chốt phạm vi dữ liệu bắt buộc và tùy chọn backup.
-2. Tạo script backup/restore tối thiểu, không tự tạo hoặc đọc memory database chưa tồn tại.
-3. Thiết kế backup SQLite nhất quán cho lúc database được triển khai.
-4. Thử restore vào thư mục tạm và xác minh quyền, cấu trúc, checksum.
-5. Ghi rõ target ngoài máy trước khi lưu archive thật.
+Việc còn lại của G0-06B:
 
-Các mục trên mới là kế hoạch; G0-06 chưa được thực hiện.
+1. Chọn target thực sự nằm ngoài máy.
+2. Chuyển archive mã hóa và sidecar checksum lên target.
+3. Tải lại từ target ngoài máy.
+4. Thử restore vào thư mục tạm và xác minh toàn vẹn.
+5. Chỉ sau đó mới đóng toàn bộ G0-06 và chuẩn bị tag `v0.0.1`.
+
+G0-06B chưa được thực hiện trong nhánh G0-06A.

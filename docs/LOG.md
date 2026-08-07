@@ -359,3 +359,48 @@ Không có commit được tạo khi các blocker này còn tồn tại.
 ### Trạng thái
 
 `G0-05`: **Hoàn thành sau hardening**. Bước tiếp theo vẫn là `G0-06 — Thiết lập backup tối thiểu`; G0-06 chưa được thực hiện.
+
+---
+
+## 2026-08-07 — G0-06A Local encrypted backup/restore
+
+### Trạng thái ban đầu
+
+- Làm việc trên nhánh `wip/g0-06a-backup`.
+- Base là `aca2deb` — `chore: complete G0-05 config and logging`.
+- WIP implementation được bảo toàn tại `b98b092` — `wip: preserve G0-06A backup implementation`.
+- Không làm lại backup tooling từ đầu.
+
+### Implementation
+
+- Bổ sung ignore cho archive backup, sidecar checksum và file partial.
+- Tạo `scripts/backup.sh` và `scripts/restore.sh`.
+- Tạo `src/mowftee/backup.py`.
+- Tạo `tests/test_backup.py`.
+- Archive dùng tar gzip và mã hóa đối xứng GPG AES-256.
+- Ciphertext có sidecar SHA-256.
+- Payload có manifest cùng checksum SHA-256 nội bộ.
+- SQLite sử dụng `sqlite3.Connection.backup()` để tạo snapshot nhất quán.
+- Restore từ chối path traversal, symlink, special file, member ngoài manifest và destination đã tồn tại.
+- Archive được đánh dấu `local_staging` và luôn cảnh báo rằng chưa phải backup ngoài máy.
+
+### Kiểm tra cuối
+
+- `bash -n scripts/backup.sh scripts/restore.sh`: đạt.
+- `uv lock --check`: đạt.
+- `uv sync --locked`: đạt.
+- `uv run ruff check .`: đạt.
+- `uv run pytest tests/test_backup.py -v`: **45 test đạt**.
+- `uv run pytest`: **84 test đạt**.
+- `git diff main...HEAD --check`: đạt.
+- Wheel build và cài vào venv CPython 3.11 tạm: đạt.
+- Import `mowftee.backup`, kiểm tra version và load packaged default config từ wheel: đạt.
+- Working tree sạch trước khi cập nhật tài liệu.
+
+### Kết luận
+
+`G0-06A`: **Hoàn thành** sau vòng kiểm tra cuối.
+
+Archive hiện chỉ là local encrypted staging. `G0-06B — Backup ngoài máy` chưa được thực hiện.
+
+Không merge `main`, không push commit đóng bước, không tag `v0.0.1`, không cài Ollama và không tải model trong G0-06A.

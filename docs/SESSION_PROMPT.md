@@ -148,13 +148,16 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Hoàn thành G0-05 với config schema version 1, loader YAML có validation và precedence rõ ràng.
 - Hoàn thành JSONL logging app/performance/audit với request context, rotation, redaction và console fallback.
 - Kiểm tra G0-05 đạt 39 test, Ruff, lock/sync, hai smoke test dùng XDG tạm và wheel-install smoke test.
+- Hoàn thành G0-06A local encrypted backup/restore tooling trên nhánh `wip/g0-06a-backup`.
+- Backup G0-06A có manifest, checksum nội bộ, ciphertext sidecar SHA-256, GPG AES-256, SQLite online backup và restore an toàn.
+- Kiểm tra G0-06A đạt Bash syntax, lock/sync, Ruff, 45 test backup, 84 full test, diff check và wheel smoke test.
 
 ### Chưa hoàn thành
 
 - Chưa cài Ollama.
 - Chưa benchmark model.
 - Chưa chọn persona, STT, TTS hoặc avatar.
-- Chưa triển khai backup/restore của G0-06.
+- Chưa thực hiện G0-06B và chưa có backup đã xác minh ngoài máy.
 
 ### Sự cố đang mở
 
@@ -164,16 +167,18 @@ Không chuyển giai đoạn nếu chưa đạt:
 
 ## Bước phải làm ngay
 
-`G0-06 — Thiết lập backup tối thiểu`.
+`G0-06B — Xác minh backup ngoài máy`.
 
-Mục tiêu dự kiến:
+G0-06A đã hoàn thành. Không viết lại backup tooling và không mở rộng G0-06A nếu không phát hiện lỗi thật sự.
 
-1. Chốt phạm vi dữ liệu cần backup và target ngoài máy.
-2. Tạo script backup/restore tối thiểu.
-3. Chuẩn bị cơ chế backup SQLite nhất quán khi memory database tồn tại.
-4. Thử restore vào thư mục tạm và kiểm tra toàn vẹn.
+Mục tiêu G0-06B:
 
-G0-06 chưa được thực hiện. Chưa cài Ollama hoặc tải model.
+1. Chọn target cloud hoặc thiết bị thực sự nằm ngoài máy.
+2. Upload archive mã hóa cùng sidecar SHA-256.
+3. Tải lại archive từ target ngoài máy.
+4. Restore vào thư mục tạm và xác minh toàn vẹn.
+
+G0-06B chưa được thực hiện. Chưa cài Ollama hoặc tải model.
 
 ## Cách trả lời
 
