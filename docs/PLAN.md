@@ -919,14 +919,15 @@ Snapshot cùng ổ không được coi là backup.
 
 **Bước hiện tại:** `G0-06` đã hoàn thành về mặt kỹ thuật và operational validation.
 
-G0-06A đã hoàn thành trên nhánh `wip/g0-06a-backup` với local encrypted backup/restore tooling, kiểm tra toàn vẹn, SQLite online backup và restore an toàn.
+G0-06A và G0-06B đều đã hoàn thành.
 
-Việc còn lại của G0-06B:
+G0-06B đã được xác minh bằng full cloud round-trip qua Google Drive riêng tư, bao gồm production backup, checksum, local restore sanity test, upload, xóa local original, download lại, checksum, restore và đối chiếu config.
 
-1. Chọn target thực sự nằm ngoài máy.
-2. Chuyển archive mã hóa và sidecar checksum lên target.
-3. Tải lại từ target ngoài máy.
-4. Thử restore vào thư mục tạm và xác minh toàn vẹn.
-5. Chỉ sau đó mới đóng toàn bộ G0-06 và chuẩn bị tag `v0.0.1`.
+Việc còn lại trước khi đóng chính thức Giai đoạn 0:
 
-G0-06B chưa được thực hiện trong nhánh G0-06A.
+1. Review Definition of Done toàn Phase 0.
+2. Đồng bộ trạng thái Git/release.
+3. Merge khi được duyệt.
+4. Tạo tag `v0.0.1` khi release closure được xác nhận.
+
+Không bắt đầu Giai đoạn 1 trước khi Phase 0 được đóng chính thức.
