@@ -23,7 +23,7 @@ Mowftee là tên duy nhất được dùng cho sản phẩm và các định dan
 - **LLM runtime:** Not installed
 - **Default model:** Not selected
 - **Voice stack:** Not selected
-- **Current project phase:** Giai đoạn 0
+- **Current project phase:** Giai đoạn 0 đã hoàn thành (release `v0.0.1`); hiện chuẩn bị Giai đoạn 1, bước tiếp theo là G1-01 — LLM Runtime
 
 ---
 
@@ -613,6 +613,21 @@ Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timest
 - **Validated archive:** `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`.
 - **Process improvement:** local restore sanity test được thực hiện trước upload và trước khi xóa local copy để xác nhận passphrase và restore usability.
 - **SQLite:** operational validation được skip vì `mowftee.sqlite3` chưa tồn tại trong dữ liệu thật hiện tại; không tính là failure.
+
+### DEC-013 — Canonical package versioning policy
+
+- **Context:** Release `v0.0.1` được tạo và tag thành công ở mốc kết thúc Phase 0 (commit `794ba78`), nhưng package metadata tại thời điểm đó vẫn mang giá trị `0.0.0`. Cần chốt chính sách versioning chuẩn cho dự án.
+- **Decision:**
+  1. `pyproject.toml` là nguồn chuẩn (canonical source of truth) cho package version.
+  2. `src/mowftee/__init__.py` (`__version__`) và `config/model-manifest.yaml` (`application.version`) phải luôn được đồng bộ trực tiếp với `pyproject.toml`.
+  3. Phiên bản trong chu kỳ phát triển giữa các release dùng định dạng `dev` (ví dụ `0.1.0.dev0`).
+  4. Trước mỗi release, version được bump chuẩn, chạy test, tạo release closure commit và gắn annotated Git tag khớp đúng phiên bản đó.
+  5. Không rewrite commit `794ba78` hay tag `v0.0.1` lịch sử.
+  6. Không áp dụng dynamic versioning machinery (`setuptools-scm`, `hatch-vcs`) tại thời điểm hiện tại.
+- **Reason:** Đơn giản, explicit, ít phụ thuộc bên ngoài, dễ audit và hoàn toàn phù hợp với quy mô dự án hiện tại.
+- **Revisit when:** Dự án chuyển sang quy trình CI/CD tự động hoá release hoàn toàn.
+
+---
 
 ## 16. Recovery architecture
 

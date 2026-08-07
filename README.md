@@ -9,13 +9,13 @@ Dự án lấy cảm hứng từ cách tương tác của AI VTuber, nhưng khô
 
 ## Trạng thái hiện tại
 
-- **Giai đoạn:** `G0 — Nền móng dự án`
-- **Phiên bản mục tiêu gần nhất:** `v0.0.1`
-- **Đã hoàn thành:** khảo sát phần cứng và chốt kiến trúc tổng thể
-- **Chưa thực hiện:** cài Ollama, chọn model, viết lõi hội thoại
-- **Bước tiếp theo:** hoàn thiện cấu trúc repository, môi trường Python và vị trí lưu model
+- **Giai đoạn:** `Giai đoạn 0 — Nền móng dự án` (Đã hoàn thành, đã phát hành release `v0.0.1`)
+- **Phiên bản phát triển hiện tại:** `0.1.0.dev0` (Giai đoạn 1)
+- **Đã hoàn thành:** khảo sát phần cứng, chốt kiến trúc, môi trường Python 3.11, storage layout, cấu hình/logging và backup local/off-machine (G0-06B)
+- **Chưa thực hiện:** cài Ollama, chọn/benchmark model, viết lõi hội thoại
+- **Bước tiếp theo:** `G1-01 — Cài runtime LLM`
 
-Mowftee hiện vẫn ở giai đoạn lập kế hoạch kỹ thuật. Repository chưa có bản AI có thể chạy.
+Repository hiện tại chưa cài Ollama runtime hoặc model. Lõi hội thoại chưa triển khai.
 
 ## Mục tiêu
 

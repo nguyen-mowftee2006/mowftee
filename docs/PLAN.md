@@ -4,7 +4,7 @@
 
 - **Dự án:** Mowftee
 - **Nền tảng chính:** CachyOS, Hyprland, Btrfs
-- **Trạng thái:** Đã hoàn thành khảo sát phần cứng; chưa cài runtime LLM
+- **Trạng thái:** Giai đoạn 0 đã hoàn thành (release `v0.0.1`); chưa cài runtime LLM
 - **Mục tiêu release:** `v1.0.0`
 - **Ngôn ngữ tương tác chính:** Tiếng Việt
 - **Nguyên tắc:** Hoàn thành, kiểm thử, ghi log và commit từng bước trước khi chuyển tiếp
@@ -917,17 +917,8 @@ Snapshot cùng ổ không được coi là backup.
 
 ## 16. Việc cần làm tiếp theo
 
-**Bước hiện tại:** `G0-06` đã hoàn thành về mặt kỹ thuật và operational validation.
+**Bước hiện tại:** Giai đoạn 0 đã hoàn thành và release `v0.0.1` đã được đóng tại commit `794ba78`.
 
-G0-06A và G0-06B đều đã hoàn thành.
+Task Pre-G1 metadata sync và chốt version policy đã hoàn tất patch + validation trên branch (canonical: `pyproject.toml`, dev version: `0.1.0.dev0`; pending commit/review closure).
 
-G0-06B đã được xác minh bằng full cloud round-trip qua Google Drive riêng tư, bao gồm production backup, checksum, local restore sanity test, upload, xóa local original, download lại, checksum, restore và đối chiếu config.
-
-Việc còn lại trước khi đóng chính thức Giai đoạn 0:
-
-1. Review Definition of Done toàn Phase 0.
-2. Đồng bộ trạng thái Git/release.
-3. Merge khi được duyệt.
-4. Tạo tag `v0.0.1` khi release closure được xác nhận.
-
-Không bắt đầu Giai đoạn 1 trước khi Phase 0 được đóng chính thức.
+**Bước tiếp theo:** `G1-01 — Cài runtime LLM` (Ollama) (NEXT / NOT STARTED).

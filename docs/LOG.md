@@ -478,3 +478,36 @@ Local restore sanity test:
 
 - Có thể dọn archive vòng đầu `...1bfb0426...` trên Google Drive.
 - Có thể dọn `/tmp/mowftee-g0-06b-restore` khi không còn cần giữ evidence.
+
+---
+
+## 2026-08-07 — Pre-G1 metadata sync và version policy
+
+### Mục tiêu
+
+Đồng bộ thông tin metadata public/project sau khi hoàn thành Phase 0 (release `v0.0.1`), xử lý nợ kỹ thuật historical version mismatch, và mở chu kỳ phát triển Phase 1 ở phiên bản `0.1.0.dev0`.
+
+### Bối cảnh & Sự cố lịch sử
+
+- Release `v0.0.1` đã được tạo và đóng tại commit `794ba78` với annotated Git tag `v0.0.1`.
+- Tại thời điểm release, package metadata (`pyproject.toml`, `__version__`, `model-manifest.yaml`) vẫn giữ nguyên `0.0.0`.
+- Đây được ghi nhận là historical release-process debt. Không rewrite commit `794ba78`, tag `v0.0.1` hay lịch sử Git.
+
+### Quyết định Version Policy
+
+- `pyproject.toml` là canonical package version source of truth.
+- `src/mowftee/__init__.py` (`__version__`) và `config/model-manifest.yaml` (`application.version`) phải luôn đồng bộ với `pyproject.toml`.
+- Trong chu kỳ phát triển giữa các release, phiên bản package được đặt dưới dạng next-version development (`0.1.0.dev0`).
+- Đối với các release tương lai: package version được bump trước release → đồng bộ `__version__` & manifest → kiểm thử → release closure commit → annotated Git tag khớp chính xác phiên bản.
+- Không sử dụng dynamic versioning plugin (`setuptools-scm`, `hatch-vcs`) ở thời điểm hiện tại.
+
+### Thay đổi
+
+- Cập nhật `pyproject.toml` và `src/mowftee/__init__.py` lên `0.1.0.dev0`.
+- Cập nhật `config/model-manifest.yaml`: `application.version` = `0.1.0.dev0`, `status` = `proposed`, `runtime.python_version` = `"3.11"`, `runtime.python_status` = `validated`.
+- Cập nhật `README.md`, `docs/SESSION_PROMPT.md`, `docs/PLAN.md` phản ánh Phase 0 COMPLETE (`v0.0.1`) và mốc tiếp theo G1-01.
+- Append Decision Log DEC-013 trong `docs/SYSTEM_ARCHITECTURE.md`.
+
+### Trạng thái
+
+Task metadata sync: patch và validation đã hoàn tất trên branch; đang chờ review/commit trước G1-01.
