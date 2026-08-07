@@ -4,7 +4,7 @@
 
 - **Dự án:** Mowftee
 - **Nền tảng chính:** CachyOS, Hyprland, Btrfs
-- **Trạng thái:** Giai đoạn 0 hoàn thành (`v0.0.1`); G1-01 hoàn thành; G1-02 model benchmark là NEXT
+- **Trạng thái:** Giai đoạn 0 hoàn thành (`v0.0.1`); G1-01 & G1-02 hoàn thành; G1-03 LLM Provider là NEXT
 - **Mục tiêu release:** `v1.0.0`
 - **Ngôn ngữ tương tác chính:** Tiếng Việt
 - **Nguyên tắc:** Hoàn thành, kiểm thử, ghi log và commit từng bước trước khi chuyển tiếp
@@ -498,27 +498,22 @@ Rollback:
 
 ### Bước G1-02 — Benchmark model ứng viên
 
-- **Trạng thái:** Tiếp theo (NEXT / NOT STARTED).
+- **Trạng thái:** Hoàn thành.
+- **Default Selected:** `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`, 4.0B parameters).
+- **Performance Fallback:** `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`, 3.2B parameters).
+- **Chỉ số & Bằng chứng thực nghiệm:**
+  - `qwen3:4b-instruct`: TTFT streaming ~0.188s (target < 4.0s), tốc độ trung bình 50 lượt 31.95 tok/s, hoàn thành 50/50 lượt, 0 lỗi instruction, 0 lỗi reasoning, 0 lỗi context/recall, 0 hallucination.
+  - `llama3.2:3b`: TTFT streaming ~0.206s (target < 4.0s), tốc độ trung bình 50 lượt 68.20 tok/s, hoàn thành 50/50 lượt, nhưng có 2 lỗi instruction, 1 lỗi reasoning toán học và 1 lỗi hallucination safety trigger.
 
-Ứng viên ban đầu:
+Ứng viên đã benchmark:
 
-- Model 3B quantized.
-- Model 4B quantized.
-- Model dự phòng nhỏ hơn nếu VRAM/RAM không đạt.
-
-Đo:
-
-- Time to first token.
-- Token/giây.
-- RAM.
-- VRAM.
-- Chất lượng tiếng Việt.
-- Khả năng tuân thủ câu trả lời ngắn.
-- Ổn định 20 và 50 lượt.
-
-Không chọn model chỉ dựa trên dung lượng hoặc độ nổi tiếng.
+- `qwen3:1.7b` (quantized 2.0B)
+- `llama3.2:3b` (quantized 3.2B)
+- `qwen3:4b-instruct` (quantized 4.0B)
 
 ### Bước G1-03 — Viết LLM Provider
+
+- **Trạng thái:** Tiếp theo (NEXT / NOT STARTED).
 
 Interface tối thiểu:
 

@@ -154,12 +154,13 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Hoàn thành G0-06B bằng full cloud round-trip qua Google Drive riêng tư với archive `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`.
 - Quy trình G0-06B có local restore sanity test trước upload/xóa local copy để xác nhận passphrase và restore usability.
 - Hoàn thành G1-01: Cài đặt và nghiệm thu LLM runtime Ollama + Vulkan (native CachyOS 0.32.6-1.1), systemd service enabled/active, bind 127.0.0.1:11434, model path `/srv/mowftee/models/ollama` (0750), smoke model `qwen3:0.6b` (validation only) 100% GPU via Vulkan, boot persistence PASS.
+- Hoàn thành G1-02: Benchmark và lựa chọn mô hình LLM. Selected default: `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`, 4.0B); Performance fallback: `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`, 3.2B).
 
-- G1-01 COMPLETE; G1-02 model benchmark là NEXT / NOT STARTED.
+- G1-01 & G1-02 COMPLETE; G1-03 LLM Provider là NEXT / NOT STARTED.
 
 ### Chưa hoàn thành
 
-- G1-02: Benchmark model ứng viên (NEXT / NOT STARTED).
+- G1-03: Viết LLM Provider (NEXT / NOT STARTED).
 - Chưa chọn persona, STT, TTS hoặc avatar.
 - Phase 0 đã hoàn thành và đóng release `v0.0.1` tại commit `794ba78`.
 - Hiện đang ở Phase 1 với version phát triển `0.1.0.dev0`.
@@ -174,11 +175,11 @@ Không chuyển giai đoạn nếu chưa đạt:
 Phase 0 đã hoàn thành và release `v0.0.1` đã đóng.
 G1-01 runtime closure COMPLETE.
 
+G1-02 model benchmark COMPLETE.
+
 Bước tiếp theo:
 
-G1-02 — Benchmark model ứng viên (NEXT / NOT STARTED).
-
-Chưa tải/chọn model ứng viên cho G1-02; qwen3:0.6b hiện chỉ là smoke/validation model. G1-02 chưa bắt đầu.
+G1-03 — Viết LLM Provider (NEXT / NOT STARTED).
 
 ## Cách trả lời
 

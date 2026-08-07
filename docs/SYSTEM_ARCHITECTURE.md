@@ -21,9 +21,31 @@ Mowftee là tên duy nhất được dùng cho sản phẩm và các định dan
 - **Architecture status:** Proposed and partially validated
 - **Hardware baseline:** Validated
 - **LLM runtime:** Installed & Validated (Ollama 0.32.6-1.1 + ollama-vulkan 0.32.6-1.1 via Vulkan backend on RTX 3050, systemd enabled/active, bind 127.0.0.1:11434)
-- **Default model:** Not selected (benchmark required)
+- **Default model:** `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`); Performance fallback: `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`)
 - **Voice stack:** Not selected
-- **Current project phase:** Giai đoạn 1; G1-01 Complete; bước tiếp theo là G1-02 — Benchmark model ứng viên
+- **Current project phase:** Giai đoạn 1; G1-01 & G1-02 Complete; bước tiếp theo là G1-03 — Viết LLM Provider
+
+---
+
+### DEC-015 — Default LLM model selection and performance fallback
+
+- **Context:** Cần lựa chọn mô hình LLM mặc định cho Mowftee dựa trên kết quả thực nghiệm chuẩn hóa (TTFT, tốc độ sinh, khả năng tuân thủ câu lệnh, chất lượng tiếng Việt, suy luận toán/logic, độ ổn định 20 và 50 lượt hội thoại).
+- **Decision:**
+  1. **Default Selected LLM:** `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`, 4.0B parameters).
+  2. **Performance Fallback LLM:** `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`, 3.2B parameters).
+- **Reasoning & Empirical Evidence:**
+  - `qwen3:4b-instruct`: TTFT streaming ~0.188s (target < 4.0s), tốc độ sinh 50 lượt trung bình 31.95 tok/s, hoàn thành 50/50 lượt (100%), 0 lỗi instruction, 0 lỗi reasoning, 0 lỗi context/recall, 0 hallucination. Chất lượng tiếng Việt tự nhiên và mượt mà nhất.
+  - `llama3.2:3b`: TTFT streaming ~0.206s (target < 4.0s), tốc độ sinh 50 lượt trung bình 68.20 tok/s, hoàn thành 50/50 lượt (100%), nhưng gặp 2 lỗi vi phạm định dạng instruction, 1 lỗi suy luận toán học và 1 lỗi safety filter trigger nhầm.
+- **Observed Processor Behavior:**
+  - `llama3.2:3b` (runner 2.5 GB) duy trì 100% GPU thuần trên VRAM 4GB của RTX 3050.
+  - `qwen3:4b-instruct` (runner 3.2 GB) đạt 13%/87% CPU/GPU runner do phình nhẹ 13% CPU tràn từ 2.7 GB VRAM khả dụng.
+  - Hành vi processor thay đổi theo kích thước runner, trạng thái session và runner isolation; không khẳng định tất cả các model đều 100% GPU trong mọi tình huống.
+- **Scope & Limitations:**
+  - `llm.selection_status` semantics: `benchmark_required` khi benchmark/chọn default chưa hoàn tất; `selected` khi benchmark hoàn tất và default model đã được chọn. Policy này áp dụng cho LLM metadata; không tự thay đổi STT/TTS/embedding status.
+  - Chưa triển khai cơ chế tự động chuyển đổi fallback (fallback switching mechanism chưa implemented trong codebase).
+  - Cấu hình chỉ cập nhật thông số mô hình mặc định và `selection_status: selected` trong manifest.
+- **Revisit when:** Thay đổi hardware VRAM, xuất hiện thế hệ model 3B/4B nhỏ hơn hoặc tích hợp tự động switching logic ở G1-03.
+
 
 ---
 

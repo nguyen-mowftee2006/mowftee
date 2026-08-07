@@ -552,3 +552,53 @@ Cài đặt runtime Ollama trên CachyOS, cấu hình GPU Vulkan, lưu mô hình
 ### Việc tiếp theo
 
 `G1-02 — Benchmark model ứng viên` (NEXT / NOT STARTED).
+
+
+---
+
+## 2026-08-08 02:15 +07 — G1-02 Benchmark và chọn mô hình LLM mặc định
+
+### Mục tiêu
+
+Benchmark các model ứng viên (`qwen3:1.7b`, `llama3.2:3b`, `qwen3:4b`/`qwen3:4b-instruct`), đo đạc TTFT, tốc độ sinh, khả năng tuân thủ câu lệnh, tiếng Việt, suy luận, độ ổn định qua 20 và 50 lượt hội thoại, và chọn model mặc định (default) cùng model dự phòng hiệu năng (performance fallback).
+
+### Quá trình thực hiện & Phát hiện kỹ thuật
+
+1. **Phân tích ứng viên & Qwen3 Thinking Variant Finding:**
+   - Ứng viên ban đầu gồm `qwen3:1.7b`, `llama3.2:3b`, và `qwen3:4b` (`359d7dd4bcda`).
+   - Phát hiện: Tag `qwen3:4b` mặc định kích hoạt khối suy nghĩ `<think>` tiêu thụ toàn bộ 192 token dự đoán, kể cả khi dùng `/no_think` hoặc `"think": false`.
+   - Giải pháp: Kéo đúng biến thể `qwen3:4b-instruct` (`0edcdef34593`). `qwen3:4b-instruct` sinh câu trả lời trực tiếp mà không bị đọng token suy nghĩ.
+
+2. **Incident & Scratch Recovery:**
+   - Trong quá trình chạy script quality screen, gặp lỗi `SyntaxError` do thoát dấu nháy kép trong inline f-string Python.
+   - Script đã được ghi chính thức vào file `/home/minhthanh/.gemini/antigravity-cli/brain/f1b3e300-23cf-4a7e-9d20-df99469aee03/scratch/run_quality_screen.py` và khôi phục thành công.
+
+3. **Reasoning Gate Correction:**
+   - Bài test reasoning cũ (Test 2) có mâu thuẫn đa nghiệm (chìa khóa ở A hoặc B đều thỏa mãn duy nhất 1 câu đúng). Test này được đánh dấu `INVALID`.
+   - Bài test thay thế (3 người An, Bình, Chi có số 2, 5, 8) có nghiệm duy nhất ($An=5, Bình=2, Chi=8$). Kết quả:
+     - `qwen3:4b-instruct`: PASS 100% cả đáp án lẫn lập luận loại trừ từng bước.
+     - `llama3.2:3b` & `qwen3:1.7b`: FAIL (tự mâu thuẫn hoặc gán sai dữ kiện).
+
+4. **20-Turn & 50-Turn Soak Test:**
+   - Cả `llama3.2:3b` và `qwen3:4b-instruct` đều hoàn thành 50/50 lượt hội thoại liên tục không crash, không trôi memory (VRAM phẳng tuyệt đối 2.48GB / 2.72GB và giải phóng 100% về 15 MiB sau khi dừng runner).
+   - `qwen3:4b-instruct`: Tốc độ trung bình 31.95 tok/s, 0 lỗi instruction, 0 lỗi reasoning, 0 lỗi context/recall, 0 hallucination. Văn phong tiếng Việt tự nhiên nhất.
+   - `llama3.2:3b`: Tốc độ trung bình 68.20 tok/s, 100% GPU thuần, nhưng gặp 2 lỗi instruction, 1 lỗi toán học và 1 lỗi safety trigger nhầm.
+
+5. **Streaming TTFT Final Gate:**
+   - Prompt: *"Giải thích bằng tiếng Việt trong tối đa 3 câu: vì sao cần sao lưu dữ liệu?"* (`stream=true`, 5 runs/model).
+   - `qwen3:4b-instruct`: TTFT trung bình `0.1880s` (median `0.1844s`, min `0.1765s`, max `0.2034s`), gen speed `36.09 tok/s`.
+   - `llama3.2:3b`: TTFT trung bình `0.2062s` (median `0.2046s`, min `0.1940s`, max `0.2287s`), gen speed `70.10 tok/s`.
+   - Cả hai model đều vượt trội chỉ tiêu TTFT < 4.0s.
+
+### Quyết định chọn Model
+
+- **Default Selected Model:** `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`, 4.0B parameters).
+- **Performance Fallback Model:** `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`, 3.2B parameters).
+
+### Trạng thái
+
+`G1-02`: **Hoàn thành**.
+
+### Việc tiếp theo
+
+`G1-03 — Viết LLM Provider` (NEXT / NOT STARTED).

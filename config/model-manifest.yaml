@@ -25,9 +25,9 @@ llm:
   enabled: false
   provider: ollama
   fallback_provider: llama_cpp_server
-  model: null
-  model_digest: null
-  quantization: null
+  model: qwen3:4b-instruct
+  model_digest: 0edcdef34593
+  quantization: Q4_K_M
   context_length: 4096
   temperature: null
   storage_path: /srv/mowftee/models/ollama
@@ -38,7 +38,7 @@ llm:
   storage_group: ollama
   storage_mode: "0750"
   storage_creation_condition: ollama_user_and_group_exist
-  selection_status: benchmark_required
+  selection_status: selected
 
 stt:
   enabled: false
