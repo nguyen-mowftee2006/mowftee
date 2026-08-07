@@ -510,4 +510,4 @@ Local restore sanity test:
 
 ### Trạng thái
 
-Task metadata sync: patch và validation đã hoàn tất trên branch; đang chờ review/commit trước G1-01.
+Task metadata sync: Pre-G1 metadata sync đã hoàn thành và được commit; G1-01 là bước tiếp theo và chưa bắt đầu.

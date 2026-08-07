@@ -919,6 +919,6 @@ Snapshot cùng ổ không được coi là backup.
 
 **Bước hiện tại:** Giai đoạn 0 đã hoàn thành và release `v0.0.1` đã được đóng tại commit `794ba78`.
 
-Task Pre-G1 metadata sync và chốt version policy đã hoàn tất patch + validation trên branch (canonical: `pyproject.toml`, dev version: `0.1.0.dev0`; pending commit/review closure).
+Task Pre-G1 metadata sync và chốt version policy COMPLETE (canonical: `pyproject.toml`, dev version: `0.1.0.dev0`); G1-01 NEXT / NOT STARTED.
 
 **Bước tiếp theo:** `G1-01 — Cài runtime LLM` (Ollama) (NEXT / NOT STARTED).

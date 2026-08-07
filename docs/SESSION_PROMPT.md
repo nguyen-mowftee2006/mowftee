@@ -154,7 +154,7 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Hoàn thành G0-06B bằng full cloud round-trip qua Google Drive riêng tư với archive `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`.
 - Quy trình G0-06B có local restore sanity test trước upload/xóa local copy để xác nhận passphrase và restore usability.
 
-- Pre-G1 metadata sync và version policy đã hoàn tất patch + validation trên branch (pending commit/review closure).
+- Pre-G1 metadata sync COMPLETE (commit `f97a7d7`); G1-01 NEXT / NOT STARTED; Ollama chưa cài; model chưa tải/benchmark.
 
 ### Chưa hoàn thành
 
@@ -162,7 +162,7 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Chưa benchmark model.
 - Chưa chọn persona, STT, TTS hoặc avatar.
 - Phase 0 đã hoàn thành và đóng release `v0.0.1` tại commit `794ba78`.
-- Hiện đang chuẩn bị cho Phase 1 với version phát triển `0.1.0.dev0`.
+- Hiện đang ở đầu Phase 1 với version phát triển `0.1.0.dev0`.
 
 ### Sự cố đang mở
 
@@ -173,9 +173,9 @@ Không chuyển giai đoạn nếu chưa đạt:
 ## Bước phải làm ngay
 
 Phase 0 đã hoàn thành và release `v0.0.1` đã đóng.
-Task Pre-G1 metadata sync đã hoàn tất patch và validation trên nhánh `chore/pre-g1-metadata-sync` (đang chờ review và commit authorization).
+Task Pre-G1 metadata sync COMPLETE (commit `f97a7d7`).
 
-Bước tiếp theo khi được Tổng bộ phê duyệt commit/merge:
+Bước tiếp theo:
 
 G1-01 — Cài runtime LLM (Ollama) (NEXT / NOT STARTED).
 
