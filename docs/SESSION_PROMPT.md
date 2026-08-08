@@ -14,10 +14,10 @@
 
 ## 2. Current Project State
 
-- **Stable Release:** `v0.1.0` (tag `v0.1.0`).
+- **Stable Release:** `v0.1.0` (tag `v0.1.0` là immutable release anchor).
 - **Phase 1 Status:** COMPLETE.
 - **Phase 2 Status:** NEXT / NOT STARTED (no Phase 2 implementation has started).
-- **Branch Model:** `dev` is the active development branch (published to `origin/dev`); `main` points to stable `v0.1.0`.
+- **Branch Model:** `dev` là active development branch (published to `origin/dev`); `main` là stable/public-facing release surface (stable code release hiện tại là `v0.1.0`).
 - **Package Version:** `0.1.0` (remains synchronized until an explicit version transition is approved).
 - **Documentation Refactor:** Refactor, audit, review/commit, and `dev` publication are COMPLETE.
 - **Cold-Start Validation:** HQ cold-start acceptance PASS / COMPLETE; Worker cold-start acceptance PASS / COMPLETE; Zero-question cold-start acceptance COMPLETE.
