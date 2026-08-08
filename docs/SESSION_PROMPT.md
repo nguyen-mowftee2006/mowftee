@@ -20,18 +20,18 @@
 - **Branch Model:** `dev` is the active development branch (published to `origin/dev`); `main` points to stable `v0.1.0`.
 - **Package Version:** `0.1.0` (remains synchronized until an explicit version transition is approved).
 - **Documentation Refactor:** Refactor, audit, review/commit, and `dev` publication are COMPLETE.
-- **Cold-Start Validation:** HQ cold-start re-test PASS / COMPLETE; Worker cold-start test NEXT / NOT YET RUN.
+- **Cold-Start Validation:** HQ cold-start acceptance PASS / COMPLETE; Worker cold-start acceptance PASS / COMPLETE; Zero-question cold-start acceptance COMPLETE.
 
 ## 3. Current Development Objective
 
-**Current Objective (pre-Phase 2):** Complete Worker cold-start acceptance test before starting Phase 2 Persona implementation.
+**Current Objective:** Prepare Phase 2 Persona implementation according to PLAN and architecture. Phase 2 implementation has NOT started yet.
 
 **Cold-Start Acceptance & Transition Flow:**
 1. Documentation refactor & publication on `dev` (COMPLETE)
 2. Initial HQ cold-start test & handoff defect correction (COMPLETE)
 3. HQ cold-start final re-test acceptance (PASS / COMPLETE)
-4. Worker cold-start test acceptance (NEXT)
-5. Prepare Phase 2 Persona implementation (Phase 2 starts ONLY after Worker cold-start acceptance)
+4. Worker cold-start test acceptance (PASS / COMPLETE)
+5. Prepare Phase 2 Persona implementation (NEXT)
 
 *Note for future HQ/workers:* Inspect current working tree and Git diff (`git status -sb`, `git diff`) to resume from the first unfinished acceptance step without asking the operator.
 
