@@ -22,8 +22,9 @@ Mowftee là tên duy nhất được dùng cho sản phẩm và các định dan
 - **Hardware baseline:** Validated
 - **LLM runtime:** Installed & Validated (Ollama 0.32.6-1.1 + ollama-vulkan 0.32.6-1.1 via Vulkan backend on RTX 3050, systemd enabled/active, bind 127.0.0.1:11434)
 - **Default model:** `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`); Performance fallback: `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`)
+- **LLM Provider:** Implemented & Validated (`OllamaLLMProvider` in `src/mowftee/llm/ollama.py`)
 - **Voice stack:** Not selected
-- **Current project phase:** Giai đoạn 1; G1-01 & G1-02 Complete; bước tiếp theo là G1-03 — Viết LLM Provider
+- **Current project phase:** Giai đoạn 1; G1-01, G1-02 & G1-03 Complete; bước tiếp theo là G1-04 — Conversation Manager
 
 ---
 
@@ -663,6 +664,23 @@ Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timest
   6. Persistence: Boot persistence được xác minh thành công qua post-reboot final gate test.
 - **Reason:** Ưu tiên package lifecycle native CachyOS, tránh dependency CUDA toolkit không cần thiết ở G1-01, giữ model storage tách biệt và API localhost-only; Vulkan/RTX 3050 đã được operationally validated.
 - **Revisit when:** Thay đổi GPU backend hoặc cập nhật lớn của CachyOS packages.
+
+---
+
+### DEC-016 — LLM Provider Implementation & Runtime Configuration Boundary
+
+- **Context:** Cần đóng gói giao tiếp LLM REST API với Ollama thành `OllamaLLMProvider` có khả năng thay thế qua Protocol `LLMProvider`, hỗ trợ cả non-streaming, NDJSON streaming, thread-safe cancellation, real TTFT timing và metrics, đồng thời giữ ranh giới rõ ràng về nguồn cấu hình runtime.
+- **Decision:**
+  1. Xây dựng package `mowftee.llm` export các base dataclasses (`ChatMessage`, `LLMResponse`, `LLMStreamChunk`, `LLMMetrics`), phân cấp exception (`LLMError`, `LLMConnectionError`, `LLMTimeoutError`, `LLMResponseError`, `LLMCancelledError`), và `@runtime_checkable` `LLMProvider` Protocol.
+  2. Triển khai `OllamaLLMProvider` trong `src/mowftee/llm/ollama.py` dùng duy nhất stdlib `urllib.request` HTTP REST Client (zero external HTTP dependencies).
+  3. Cấu hình runtime duy nhất là `config/default.yaml` (`llm` section). `config/model-manifest.yaml` là file hồ sơ/metadata selection, KHÔNG được đọc ở runtime.
+  4. TTFT của streaming được đo thực tế bằng `time.perf_counter()` từ trước khi gửi HTTP request tới token content khác `""` đầu tiên.
+  5. Quản lý cancellation bằng registry `_active_requests`, trạng thái `_cancelled_requests`, và `_registry_lock`. Thao tác `response.close()` được thực hiện ngoài lock để tránh blocking I/O; cancel idempotency đảm bảo lần đầu trả `True`, các lần sau trả `False`.
+  6. Redaction logging nghiêm ngặt: không log prompt, message content, response text, options payload hay raw HTTP body.
+  7. Lệnh CLI `mow` và TUI interface là planned extension, KHÔNG kéo vào scope G1-03.
+- **Reason:** Bảo đảm kiến trúc modular monolith sạch, không hard-code API Ollama ngoài provider, tách biệt cấu hình runtime và metadata manifest, xử lý hủy request an toàn, và bảo vệ quyền riêng tư người dùng.
+- **Validated with:** 43 unit tests (`tests/test_llm_provider.py`), 154 total unit test suite (`uv run pytest`), real Ollama smoke test với `qwen3:4b-instruct` (health_check, chat, stream TTFT ~304ms, cancel, metrics), và manual interactive chat test.
+- **Revisit when:** Bổ sung LLM provider engine khác (ví dụ `llama.cpp` server) hoặc triển khai Conversation Manager ở G1-04.
 
 ---
 

@@ -207,6 +207,23 @@ def test_default_config_falls_back_to_packaged_resource(
         ({"logging": {"backup_count": -1}}, "logging.backup_count"),
         ({"privacy": {"log_prompts": "yes"}}, "privacy.log_prompts"),
         ({"paths": {"model_dir": "  "}}, "paths.model_dir"),
+        ({"llm": "invalid"}, "llm"),
+        ({"llm": {"provider": ""}}, "llm.provider"),
+        ({"llm": {"provider": 123}}, "llm.provider"),
+        ({"llm": {"model": "  "}}, "llm.model"),
+        ({"llm": {"base_url": "ftp://localhost"}}, "llm.base_url"),
+        ({"llm": {"base_url": "http://"}}, "llm.base_url"),
+        ({"llm": {"timeout": 0}}, "llm.timeout"),
+        ({"llm": {"timeout": -5.0}}, "llm.timeout"),
+        ({"llm": {"timeout": True}}, "llm.timeout"),
+        ({"llm": {"timeout": float("nan")}}, "llm.timeout"),
+        ({"llm": {"timeout": float("inf")}}, "llm.timeout"),
+        ({"llm": {"timeout": float("-inf")}}, "llm.timeout"),
+        ({"llm": {"health_timeout": 0.0}}, "llm.health_timeout"),
+        ({"llm": {"health_timeout": False}}, "llm.health_timeout"),
+        ({"llm": {"health_timeout": float("nan")}}, "llm.health_timeout"),
+        ({"llm": {"health_timeout": float("inf")}}, "llm.health_timeout"),
+        ({"llm": {"health_timeout": float("-inf")}}, "llm.health_timeout"),
     ],
 )
 def test_invalid_values_report_field(update: dict[str, object], field_name: str) -> None:
@@ -214,6 +231,31 @@ def test_invalid_values_report_field(update: dict[str, object], field_name: str)
 
     with pytest.raises(ConfigValidationError, match=field_name):
         validate_config(config)
+
+
+def test_default_llm_config_loaded(tmp_path: Path) -> None:
+    config = load_config(environment=isolated_environment(tmp_path))
+
+    assert config["llm"]["provider"] == "ollama"  # type: ignore[index]
+    assert config["llm"]["model"] == "qwen3:4b-instruct"  # type: ignore[index]
+    assert config["llm"]["base_url"] == "http://127.0.0.1:11434"  # type: ignore[index]
+    assert config["llm"]["timeout"] == 30.0  # type: ignore[index]
+    assert config["llm"]["health_timeout"] == 2.0  # type: ignore[index]
+
+
+def test_llm_env_overrides(tmp_path: Path) -> None:
+    environment = isolated_environment(
+        tmp_path,
+        MOWFTEE_LLM__MODEL="llama3.2:3b",
+        MOWFTEE_LLM__TIMEOUT="45.5",
+        MOWFTEE_LLM__HEALTH_TIMEOUT="5",
+    )
+    config = load_config(environment=environment)
+
+    assert config["llm"]["model"] == "llama3.2:3b"  # type: ignore[index]
+    assert config["llm"]["timeout"] == 45.5  # type: ignore[index]
+    assert config["llm"]["health_timeout"] == 5  # type: ignore[index]
+
 
 
 def test_deep_merge_and_loader_do_not_mutate_inputs(tmp_path: Path) -> None:

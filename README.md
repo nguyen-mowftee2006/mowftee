@@ -14,8 +14,9 @@ Dự án lấy cảm hứng từ cách tương tác của AI VTuber, nhưng khô
 - **G1-02 Complete:** Đã benchmark xong các mô hình ứng viên.
   - Default Model: `qwen3:4b-instruct`
   - Performance Fallback: `llama3.2:3b`
+- **G1-03 Complete:** LLM Provider (`OllamaLLMProvider`) đã viết và nghiệm thu thành công (REST HTTP, non-stream, streaming, thread-safe cancel, real TTFT, metrics, privacy redaction & real Ollama smoke PASS).
 - **Model Storage:** `/srv/mowftee/models/ollama/`
-- **Bước tiếp theo:** `G1-03 — Viết LLM Provider`
+- **Bước tiếp theo:** `G1-04 — Conversation Manager`
 
 ## Mục tiêu
 

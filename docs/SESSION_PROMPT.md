@@ -156,11 +156,13 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Hoàn thành G1-02: Benchmark và lựa chọn mô hình LLM. Selected default: `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`, 4.0B); Performance fallback: `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`, 3.2B).
 - Post-cleanup G1-02: Đã dọn dẹp các mô hình thử nghiệm (`qwen3:0.6b`, `qwen3:1.7b`, `qwen3:4b`), thu hồi khoảng 4.4 GB dung lượng; hiện chỉ giữ `qwen3:4b-instruct` và `llama3.2:3b` trong hệ thống.
 
-- G1-01 & G1-02 COMPLETE; G1-03 LLM Provider là NEXT / NOT STARTED.
+- Hoàn thành G1-03: Viết LLM Provider (`mowftee.llm` package, `OllamaLLMProvider` giao tiếp stdlib HTTP REST API với Ollama 127.0.0.1:11434, `health_check()`, `chat()`, NDJSON `stream_chat()`, thread-safe `cancel()`, real TTFT, `get_metrics()`, 43 unit tests & real Ollama smoke PASS).
+
+- G1-01, G1-02 & G1-03 COMPLETE; G1-04 Conversation Manager là NEXT / NOT STARTED.
 
 ### Chưa hoàn thành
 
-- G1-03: Viết LLM Provider (NEXT / NOT STARTED).
+- G1-04: Conversation Manager (NEXT / NOT STARTED).
 - Chưa chọn persona, STT, TTS hoặc avatar.
 - Phase 0 đã hoàn thành và đóng release `v0.0.1` tại commit `794ba78`.
 - Hiện đang ở Phase 1 với version phát triển `0.1.0.dev0`.
@@ -174,12 +176,12 @@ Không chuyển giai đoạn nếu chưa đạt:
 
 Phase 0 đã hoàn thành và release `v0.0.1` đã đóng.
 G1-01 runtime closure COMPLETE.
-
 G1-02 model benchmark COMPLETE.
+G1-03 LLM Provider COMPLETE.
 
 Bước tiếp theo:
 
-G1-03 — Viết LLM Provider (NEXT / NOT STARTED).
+G1-04 — Conversation Manager (NEXT / NOT STARTED).
 
 ## Cách trả lời
 

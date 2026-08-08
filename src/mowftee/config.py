@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import copy
+import math
 import os
 import re
 from collections.abc import Mapping
 from importlib import resources
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -231,6 +233,49 @@ def validate_config(config: ConfigMapping) -> ConfigDict:
     privacy = _require_section(validated, "privacy")
     for flag_name in PRIVACY_FLAGS:
         _require_bool(privacy, f"privacy.{flag_name}", flag_name)
+
+    llm = _require_section(validated, "llm")
+    provider = llm.get("provider")
+    if not isinstance(provider, str) or not provider.strip():
+        raise ConfigValidationError("Field 'llm.provider' must be a non-empty string")
+
+    model = llm.get("model")
+    if not isinstance(model, str) or not model.strip():
+        raise ConfigValidationError("Field 'llm.model' must be a non-empty string")
+
+    base_url = llm.get("base_url")
+    if not isinstance(base_url, str) or not base_url.strip():
+        raise ConfigValidationError("Field 'llm.base_url' must be a non-empty string")
+
+    try:
+        parsed_url = urlsplit(base_url)
+    except ValueError:
+        raise ConfigValidationError("Field 'llm.base_url' must be a valid HTTP/HTTPS URL")
+
+    if parsed_url.scheme not in {"http", "https"} or not parsed_url.hostname:
+        raise ConfigValidationError(
+            "Field 'llm.base_url' must be a valid HTTP/HTTPS URL with a hostname"
+        )
+
+    timeout = llm.get("timeout")
+    if (
+        type(timeout) not in (int, float)
+        or isinstance(timeout, bool)
+        or not math.isfinite(timeout)
+        or timeout <= 0
+    ):
+        raise ConfigValidationError("Field 'llm.timeout' must be a number greater than 0")
+
+    health_timeout = llm.get("health_timeout")
+    if (
+        type(health_timeout) not in (int, float)
+        or isinstance(health_timeout, bool)
+        or not math.isfinite(health_timeout)
+        or health_timeout <= 0
+    ):
+        raise ConfigValidationError(
+            "Field 'llm.health_timeout' must be a number greater than 0"
+        )
 
     return validated
 

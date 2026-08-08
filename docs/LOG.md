@@ -625,10 +625,59 @@ Dọn dẹp các mô hình thử nghiệm không còn sử dụng và các scrip
    - Working tree repository hoàn toàn sạch (`main...origin/main`).
    - Việc dọn dẹp không làm thay đổi quyết định chọn mô hình LLM.
 
-### Trạng thái
-
 `Post G1-02 cleanup`: **Hoàn thành**.
 
 ### Việc tiếp theo
 
 `G1-03 — Viết LLM Provider` (NEXT / NOT STARTED).
+
+
+---
+
+## 2026-08-08 12:50 +07 — G1-03 Viết LLM Provider (OllamaLLMProvider)
+
+### Mục tiêu
+
+Xây dựng module `mowftee.llm` để đóng gói giao tiếp HTTP REST API với Ollama local runtime (`127.0.0.1:11434`), hỗ trợ `health_check()`, non-streaming `chat()`, NDJSON streaming `stream_chat()`, thread-safe `cancel()`, và thống kê hiệu năng `get_metrics()`.
+
+### Quá trình thực hiện & Thiết kế chính
+
+1. **Base Abstractions & Taxonomy (`src/mowftee/llm/base.py`):**
+   - Đĩnh nghĩa dataclasses: `ChatMessage`, `LLMResponse`, `LLMStreamChunk`, `LLMMetrics`.
+   - Phân cấp ngoại lệ: `LLMError` (gốc) -> `LLMConnectionError`, `LLMTimeoutError`, `LLMResponseError`, `LLMCancelledError`.
+   - Protocol `@runtime_checkable`: `LLMProvider`.
+
+2. **Runtime Configuration & Validation (`config/default.yaml`, `src/mowftee/config.py`, `src/mowftee/logging_setup.py`):**
+   - Runtime source-of-truth cho LLM config nằm tại `config/default.yaml` (`llm` section). `config/model-manifest.yaml` KHÔNG được đọc ở runtime.
+   - Validation chặt chẽ: `provider` (string), `model` (string non-empty), `base_url` (giao thức http/https, có hostname, loại bỏ trailing slash), `timeout` & `health_timeout` (số thực hữu hạn > 0, từ chối bool/NaN/inf).
+   - Context logging: bổ sung `get_request_id()` và `generate_request_id()`.
+
+3. **OllamaLLMProvider Implementation (`src/mowftee/llm/ollama.py`):**
+   - Giao tiếp qua stdlib `urllib.request` REST HTTP API (zero external HTTP dependencies).
+   - `health_check()`: GET `/api/version` sử dụng `health_timeout`, trả về `True`/`False` an toàn mà không ném exception ra ngoài.
+   - `chat()`: POST `/api/chat` non-streaming với schema validation, strict numeric field parsing (`_parse_non_negative_int`), và error mapping chuẩn (`HTTPError` -> `LLMResponseError`, `URLError(timeout)`/`TimeoutError` -> `LLMTimeoutError`, `URLError(other)` -> `LLMConnectionError`).
+   - `stream_chat()`: POST `/api/chat` NDJSON streaming (`stream: true`), đọc theo dòng qua `readline()`, validate `model` nhất quán giữa các chunks, tính real TTFT bằng `time.perf_counter()`, và trả về `LLMStreamChunk` kèm metrics ở final chunk (`done: true`). EOF trước `done: true` được coi là hỏng stream và ném `LLMResponseError`.
+   - `cancel()` & Registry: `_active_requests: dict[str, Any]`, `_cancelled_requests: set[str]`, `_registry_lock: threading.Lock`. Thực hiện `response.close()` ngoài registry lock để tránh I/O blocking trong lúc giữ lock; cancel idempotency đảm bảo lần 1 trả `True`, lần 2 trả `False`.
+   - Logging Privacy: Không log prompt, message content, response text, options payload hay raw HTTP body dưới mọi kênh log.
+
+4. **Unit Test Suite (`tests/test_llm_base.py`, `tests/test_llm_provider.py`):**
+   - Xây dựng 43 unit test cases cover toàn bộ kịch bản mong muốn và ranh giới hệ thống: protocol validation, health_check, chat successful/error mappings, strict numeric parsing (reject bool/float/string/negative), request context lifecycle/restore, streaming chunks/NDJSON/model mismatch/premature EOF, cancel idempotency, blocking cancellation với `threading.Event`, registry cleanup trên mọi nhánh execution, và privacy redaction verification.
+
+5. **Real Ollama Integration Smoke Test:**
+   - Đã kiểm tra thực tế end-to-end với dịch vụ Ollama thật (`0.32.6`) và default model `qwen3:4b-instruct`:
+     - `health_check()`: `True` (~6.95 ms)
+     - `chat()`: `'Mowftee đã kết nối thành công.'` (wall duration ~6.25s)
+     - `stream_chat()`: `'Chào từ Mowftee!'` (9 chunks, TTFT ~304.73 ms, generation speed ~39.33 tok/s)
+     - `cancel()`: Hủy stream câu lệnh dài thành công, `cancel()` lần 1 trả `True`, worker thread nhận `LLMCancelledError` và thoát sạch, `cancel()` lần 2 trả `False`, registry & cancelled state dọn dẹp phẳng 0.
+     - Final Provider Metrics: `total=3`, `success=2`, `failed=1`, `total_prompt_tokens=52`, `total_eval_tokens=20`.
+
+6. **Manual Interactive Chat Finding:**
+   - Script tương tác chat thử nghiệm xác nhận `OllamaLLMProvider` hoạt động mượt mượt; việc `qwen3:4b-instruct` trả lời kiểu trợ lý chung hay tự đổi ngôn ngữ là behavior thô của base model khi chưa có persona/context policy của G1-04.
+
+### Trạng thái
+
+`G1-03`: **Hoàn thành**.
+
+### Việc tiếp theo
+
+`G1-04 — Conversation Manager` (NEXT / NOT STARTED).

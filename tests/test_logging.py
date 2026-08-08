@@ -17,7 +17,9 @@ from mowftee.config import load_config
 from mowftee.logging_setup import (
     LOG_CHANNELS,
     REDACTED,
+    generate_request_id,
     get_logger,
+    get_request_id,
     new_request_id,
     redact_sensitive_data,
     request_context,
@@ -117,6 +119,25 @@ def test_request_context_is_nested_and_restored(tmp_path: Path) -> None:
 def test_new_request_id_is_uuid() -> None:
     with request_context("temporary"):
         assert uuid.UUID(new_request_id())
+
+
+def test_get_request_id_reflects_current_context() -> None:
+    assert get_request_id() is None
+    with request_context("bound-id"):
+        assert get_request_id() == "bound-id"
+        with request_context("nested-id"):
+            assert get_request_id() == "nested-id"
+        assert get_request_id() == "bound-id"
+    assert get_request_id() is None
+
+
+def test_generate_request_id_does_not_mutate_context() -> None:
+    with request_context("context-id"):
+        generated = generate_request_id()
+        assert uuid.UUID(generated)
+        assert generated != "context-id"
+        assert get_request_id() == "context-id"
+
 
 
 def test_redaction_handles_nested_values_urls_and_exceptions_without_mutation() -> None:

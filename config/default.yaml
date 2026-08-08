@@ -19,3 +19,10 @@ privacy:
   log_conversations: false
   log_file_contents: false
   log_audio_metadata: false
+
+llm:
+  provider: ollama
+  model: qwen3:4b-instruct
+  base_url: http://127.0.0.1:11434
+  timeout: 30.0
+  health_timeout: 2.0

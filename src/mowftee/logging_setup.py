@@ -447,6 +447,18 @@ def get_logger(name: str | None = None, *, channel: str = "app") -> logging.Logg
     return logging.getLogger(logger_name)
 
 
+def get_request_id() -> str | None:
+    """Return the active request identifier from context, or None if unbound."""
+
+    return _request_id_var.get()
+
+
+def generate_request_id() -> str:
+    """Generate a new UUID request identifier without mutating the current context."""
+
+    return str(uuid.uuid4())
+
+
 def new_request_id() -> str:
     """Create and activate a new UUID request identifier."""
 

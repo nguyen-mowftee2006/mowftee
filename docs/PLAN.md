@@ -4,7 +4,7 @@
 
 - **Dự án:** Mowftee
 - **Nền tảng chính:** CachyOS, Hyprland, Btrfs
-- **Trạng thái:** Giai đoạn 0 hoàn thành (`v0.0.1`); G1-01 & G1-02 hoàn thành; G1-03 LLM Provider là NEXT
+- **Trạng thái:** Giai đoạn 0 hoàn thành (`v0.0.1`); G1-01, G1-02, G1-03 hoàn thành; G1-04 Conversation Manager là NEXT
 - **Mục tiêu release:** `v1.0.0`
 - **Ngôn ngữ tương tác chính:** Tiếng Việt
 - **Nguyên tắc:** Hoàn thành, kiểm thử, ghi log và commit từng bước trước khi chuyển tiếp
@@ -514,26 +514,24 @@ Rollback:
 
 ### Bước G1-03 — Viết LLM Provider
 
-- **Trạng thái:** Tiếp theo (NEXT / NOT STARTED).
-
-Interface tối thiểu:
-
-```text
-chat()
-stream_chat()
-health_check()
-get_metrics()
-cancel()
-```
-
-Tiêu chí:
-
-- Không để code ứng dụng gọi trực tiếp API Ollama ở nhiều nơi.
-- Timeout và lỗi kết nối được xử lý.
-- Có request ID.
-- Có thể đổi provider sau này.
+- **Trạng thái:** Hoàn thành.
+- **Base types & Protocol:** `src/mowftee/llm/base.py` (`ChatMessage`, `LLMResponse`, `LLMStreamChunk`, `LLMMetrics`, exception hierarchy `LLMError`/`LLMConnectionError`/`LLMTimeoutError`/`LLMResponseError`/`LLMCancelledError`, `@runtime_checkable` `LLMProvider` Protocol).
+- **Implementation:** `src/mowftee/llm/ollama.py` (`OllamaLLMProvider` giao tiếp qua stdlib `urllib.request` HTTP REST API).
+- **Capabilities implemented:**
+  - `health_check()`: GET `/api/version` kiểm tra dịch vụ sẵn sàng với `health_timeout`, không ném exception ra ngoài.
+  - `chat()`: POST `/api/chat` non-streaming với input validation, request context, timing/token metrics, và error mapping.
+  - `stream_chat()`: POST `/api/chat` streaming NDJSON với strict validation, chunk model consistency, và real TTFT timing.
+  - `cancel()`: Hủy thread-safe request đang active qua `_active_requests` registry và `_cancelled_requests` state; thực hiện `response.close()` ngoài lock.
+  - `get_metrics()`: Trả về snapshot copy độc lập của `LLMMetrics`.
+- **Runtime Config Source:** `config/default.yaml` (`llm` section). `config/model-manifest.yaml` KHÔNG được đọc ở runtime.
+- **Unit Tests:** `tests/test_llm_base.py`, `tests/test_llm_provider.py` (43 unit tests).
+- **Real Ollama Smoke Test:** PASS với `qwen3:4b-instruct` (health_check ~6.95ms, non-stream chat PASS, stream chat PASS TTFT ~304.73ms & ~39.33 tok/s, cancellation PASS, metrics final total=3, success=2, failed=1).
+- **Manual Chat Finding:** Interactive chat script xác nhận `OllamaLLMProvider` hoạt động mượt mà end-to-end; behavior thô của default model (đổi ngôn ngữ, giọng trợ lý chung) là bình thường do chưa có persona/context policy của G1-04.
+- **Extension Status:** Ý tưởng lệnh CLI `mow` và TUI terminal interface là planned extension, KHÔNG thuộc scope G1-03 và chưa được triển khai.
 
 ### Bước G1-04 — Conversation Manager
+
+- **Trạng thái:** Tiếp theo (NEXT / NOT STARTED).
 
 Chức năng:
 
