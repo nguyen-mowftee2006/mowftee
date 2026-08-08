@@ -9,15 +9,14 @@ Dự án lấy cảm hứng từ cách tương tác của AI VTuber, nhưng khô
 
 ## Trạng thái hiện tại
 
-- **Giai đoạn:** Phase 0 hoàn thành (release `v0.0.1`); hiện ở Phase 1 (`0.1.0.dev0`).
+- **Giai đoạn:** Phase 1 hoàn thành (release `v0.1.0`); bước tiếp theo là Phase 2 (Persona).
 - **G1-01 Complete:** Ollama + Vulkan runtime đã cài đặt và nghiệm thu thành công.
-- **G1-02 Complete:** Đã benchmark xong các mô hình ứng viên.
-  - Default Model: `qwen3:4b-instruct`
-  - Performance Fallback: `llama3.2:3b`
-- **G1-03 Complete:** LLM Provider (`OllamaLLMProvider`) đã viết và nghiệm thu thành công (REST HTTP, non-stream, streaming, thread-safe cancel, real TTFT, metrics, privacy redaction & real Ollama smoke PASS).
-- **G1-04 Complete:** Conversation Manager (`ConversationManager`) và CLI runner tối thiểu (`mowftee.cli`, `scripts/chat.sh`) đã viết và nghiệm thu thành công (atomic turn commit, system policy & real-time datetime injection, lazy streaming, non-blocking cancellation & real Ollama smoke PASS).
+- **G1-02 Complete:** Đã benchmark xong các mô hình ứng viên (Default: `qwen3:4b-instruct`, Performance Fallback: `llama3.2:3b`).
+- **G1-03 Complete:** LLM Provider (`OllamaLLMProvider`) đã viết và nghiệm thu thành công.
+- **G1-04 Complete:** Conversation Manager (`ConversationManager`) và CLI runner tối thiểu (`mowftee.cli`, `scripts/chat.sh`) đã viết và nghiệm thu thành công.
+- **G1-05 Complete:** Test & benchmark suite (5-minute smoke soak, 20-turn functional, 50-turn stability, reboot persistence, service recovery test) PASS 100%, benchmark artifact saved.
 - **Model Storage:** `/srv/mowftee/models/ollama/`
-- **Bước tiếp theo:** `G1-05 — Test và benchmark`
+- **Bước tiếp theo:** `Phase 2 — Persona và chất lượng hội thoại (v0.2.x)`
 
 ## Mục tiêu
 

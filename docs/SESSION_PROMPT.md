@@ -159,15 +159,14 @@ Không chuyển giai đoạn nếu chưa đạt:
 - Hoàn thành G1-03: Viết LLM Provider (`mowftee.llm` package, `OllamaLLMProvider` giao tiếp stdlib HTTP REST API với Ollama 127.0.0.1:11434, `health_check()`, `chat()`, NDJSON `stream_chat()`, thread-safe `cancel()`, real TTFT, `get_metrics()`, 43 unit tests & real Ollama smoke PASS).
 - Hoàn thành G1-04: Viết Conversation Manager (`mowftee.conversation` package, `ConversationManager` với atomic turn commit, system policy & real-time datetime injection, sliding window `max_turns`, lazy streaming, non-blocking cancel, minimal CLI `mowftee.cli` / `scripts/chat.sh`, 25 unit tests & real Ollama smoke PASS).
 
-- G1-01, G1-02, G1-03 & G1-04 COMPLETE; G1-05 Test và benchmark là NEXT / NOT STARTED.
+- G1-01, G1-02, G1-03, G1-04 & G1-05 COMPLETE; Phase 1 complete (v0.1.0); Phase 2 Persona là NEXT / NOT STARTED.
 
 ### Chưa hoàn thành
 
-- G1-05: Test và benchmark (NEXT / NOT STARTED).
-- Phase 2: Persona (NOT STARTED).
+- Phase 2: Persona (NEXT / NOT STARTED).
 - Chưa chọn persona, STT, TTS hoặc avatar.
 - Phase 0 đã hoàn thành và đóng release `v0.0.1` tại commit `794ba78`.
-- Hiện đang ở Phase 1 với version phát triển `0.1.0.dev0`.
+- Phase 1 đã hoàn thành và đóng release `v0.1.0`.
 
 ### Sự cố đang mở
 
@@ -181,10 +180,11 @@ G1-01 runtime closure COMPLETE.
 G1-02 model benchmark COMPLETE.
 G1-03 LLM Provider COMPLETE.
 G1-04 Conversation Manager COMPLETE.
+G1-05 Test và benchmark COMPLETE.
 
 Bước tiếp theo:
 
-G1-05 — Test và benchmark (NEXT / NOT STARTED).
+Phase 2 — Persona và chất lượng hội thoại (NEXT / NOT STARTED).
 
 ## Cách trả lời
 

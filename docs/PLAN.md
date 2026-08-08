@@ -4,7 +4,7 @@
 
 - **Dự án:** Mowftee
 - **Nền tảng chính:** CachyOS, Hyprland, Btrfs
-- **Trạng thái:** Giai đoạn 0 hoàn thành (`v0.0.1`); G1-01, G1-02, G1-03, G1-04 hoàn thành; G1-05 Test và benchmark là NEXT
+- **Trạng thái:** Giai đoạn 1 hoàn thành (`v0.1.0`); Giai đoạn 2 Persona là NEXT / NOT STARTED
 - **Mục tiêu release:** `v1.0.0`
 - **Ngôn ngữ tương tác chính:** Tiếng Việt
 - **Nguyên tắc:** Hoàn thành, kiểm thử, ghi log và commit từng bước trước khi chuyển tiếp
@@ -546,7 +546,7 @@ Rollback:
 
 ### Bước G1-05 — Test và benchmark
 
-- **Trạng thái:** Tiếp theo (NEXT / NOT STARTED).
+- **Trạng thái:** Hoàn thành (COMPLETE).
 
 Chức năng & Yêu cầu:
 
@@ -558,13 +558,13 @@ Chức năng & Yêu cầu:
 
 ### Definition of Done Giai đoạn 1
 
-- [ ] Chat terminal hoạt động.
-- [ ] Streaming hoạt động.
-- [ ] Model dùng GPU hoặc có lý do rõ ràng nếu không.
-- [ ] 50 lượt không crash.
-- [ ] Benchmark được lưu.
-- [ ] Không hard-code model/path.
-- [ ] Tag `v0.1.0`.
+- [x] Chat terminal hoạt động.
+- [x] Streaming hoạt động.
+- [x] Model dùng GPU hoặc có lý do rõ ràng nếu không.
+- [x] 50 lượt không crash.
+- [x] Benchmark được lưu.
+- [x] Không hard-code model/path.
+- [x] Tag `v0.1.0`.
 
 ---
 

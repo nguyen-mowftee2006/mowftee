@@ -12,7 +12,7 @@ identity:
 
 application:
   name: mowftee
-  version: 0.1.0.dev0
+  version: 0.1.0
   language: vi
 
 hardware_profile:

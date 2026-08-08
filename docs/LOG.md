@@ -735,3 +735,36 @@ Rà soát closure phát hiện việc ghi nhận mốc tiếp theo sang Phase 2 
 - `G1-05`: `NEXT / NOT STARTED`.
 - `Giai đoạn 1 (v0.1.x)`: `IN PROGRESS`.
 - `Phase 2 (v0.2.x Persona)`: `NOT STARTED`.
+
+---
+
+## 2026-08-09 01:30 +07 — G1-05 Test, Benchmark & Phase 1 Release Closure (v0.1.0)
+
+### Nội dung thực hiện
+
+1. **Nghiệm thu toàn bộ các cổng kiểm thử G1-05:**
+   - **5-minute smoke soak test (G1-05A2):** 349.36 giây (5.82 phút), 8 lượt hội thoại + `/clear` + `/exit`, streaming hiển thị mượt mà thời gian thực, giữ ngữ cảnh tốt trước khi clear, dọn dẹp ngữ cảnh chuẩn xác sau khi clear, 0 crash/traceback, PASS.
+   - **Functional test (G1-05B):** 20/20 lượt hoàn thành (56.62s total, trung bình 2.83s/lượt), 100% context recall, 100% instruction adherence, 0 lặp lại lượt giả, PASS.
+   - **Stability test (G1-05C/C2/C3):** 50/50 lượt hoàn thành (159.04s total), 0 crash, 0 exception, TTFT trung vị 1.5518s (p95 1.7066s, min 0.3306s, max 2.7849s), tốc độ sinh trung vị 26.27 tok/s (min 24.71, max 35.26 tok/s), 0 OOM, PASS. Vấn đề lặp lượt giả từ đầu vào dài trong quá khứ KHÔNG tái hiện; không áp dụng sửa đổi đoán mò.
+   - **Reboot test (G1-05D):** Kiểm thử sau khởi động lại máy, dịch vụ Ollama tự động active, localhost bind 127.0.0.1:11434 đúng, mô hình `qwen3:4b-instruct` sẵn sàng, hội thoại thực tế PASS, 0 sửa chữa thủ công.
+   - **Service recovery test (G1-05E):** Kiểm thử dừng và chạy lại dịch vụ Ollama. Khi dịch vụ ngắt, `ConversationManager` ném `LLMConnectionError`, giữ nguyên lịch sử hội thoại đã commit, không append lượt lỗi, reset trạng thái active về idle. Khi dịch vụ bật lại, hội thoại phục hồi bình thường và commit đúng 1 cặp tin nhắn mới, PASS.
+
+2. **Ghi nhận bằng chứng tài nguyên & nhiệt độ:**
+   - RAM available sau stability test: ~3.6 GiB; RAM trở lại baseline ~4.0 GiB sau khi unload/reboot. Không phát hiện bằng chứng về persistent memory leak từ các hành vi phục hồi/tài nguyên quan sát được.
+   - VRAM sử dụng: ~2736 MiB / 4096 MiB.
+   - Nhiệt độ CPU: Người vận hành ghi nhận peak ~91°C trong lượt stability 50 lượt ban đầu; theo dõi kiểm chứng có kiểm soát ghi nhận peak CPU 85°C.
+   - Nhiệt độ GPU: Đạt peak 76°C trong theo dõi kiểm chứng; GPU utilization chạm mốc 100% ngắn hạn; không quan sát thấy thermal throttling trong lượt kiểm chứng có kiểm soát.
+
+3. **Lưu trữ Benchmark Artifact (G1-05F2):**
+   - Đã lưu file benchmark JSON chính thức tại canonical runtime-state path: `${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/benchmarks/g1-05-phase1-benchmark.json`.
+   - Đáp ứng 100% tiêu chí Definition of Done "benchmark được lưu" của Giai đoạn 1.
+
+4. **Đồng bộ phiên bản Release v0.1.0:**
+   - Đồng bộ phiên bản `0.1.0` tại 3 file chuẩn: `pyproject.toml`, `src/mowftee/__init__.py`, và `config/model-manifest.yaml`.
+   - Bảo toàn ghi chú định hướng kiến trúc AIRI/Sanbaka đã duyệt trong `docs/SYSTEM_ARCHITECTURE.md` và bổ sung DEC-018 ghi nhận đóng Phase 1.
+
+### Trạng thái
+
+- `G1-05`: **Hoàn thành**.
+- `Giai đoạn 1 (v0.1.x)`: **Hoàn thành (`v0.1.0`)**.
+- `Phase 2 (v0.2.x Persona)`: `NEXT / NOT STARTED`.

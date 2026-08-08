@@ -25,7 +25,7 @@ Mowftee là tên duy nhất được dùng cho sản phẩm và các định dan
 - **LLM Provider:** Implemented & Validated (`OllamaLLMProvider` in `src/mowftee/llm/ollama.py`)
 - **Conversation Manager:** Implemented & Validated (`ConversationManager` in `src/mowftee/conversation/manager.py`)
 - **Voice stack:** Not selected
-- **Current project phase:** Giai đoạn 1 (v0.1.x IN PROGRESS); G1-01, G1-02, G1-03 & G1-04 Complete; bước tiếp theo là G1-05 — Test và benchmark
+- **Current project phase:** Giai đoạn 1 (v0.1.0) COMPLETE; bước tiếp theo là Giai đoạn 2 (v0.2.x Persona)
 
 ---
 
@@ -702,6 +702,21 @@ Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timest
 
 ---
 
+### DEC-018 — Phase 1 Validation & Release v0.1.0 Closure Boundary
+
+- **Context:** Cần nghiệm thu toàn bộ các cổng kiểm thử cuối cùng của Phase 1 (G1-05), lưu trữ bằng chứng benchmark chính thức tại đường dẫn quy chuẩn, và xác định ranh giới phát hành phiên bản release `v0.1.0`.
+- **Decision:**
+  1. **Kết quả kiểm thử G1-05:** 5-minute smoke soak (349.36s), 20-turn functional, 50-turn/60-minute stability (TTFT median 1.5518s, p95 1.7066s, 26.27 tok/s median, 0 crash/exception), reboot persistence, và Ollama service recovery (`LLMConnectionError` handling, preservation of committed history) đều đạt PASS.
+  2. **Canonical Benchmark Storage:** Bằng chứng thực nghiệm chính thức được tạo và lưu trữ dưới dạng JSON tại `${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/benchmarks/g1-05-phase1-benchmark.json`, đáp ứng hoàn toàn tiêu chí Definition of Done của Phase 1.
+  3. **Tài nguyên & Nhiệt độ:** RAM khả dụng phục hồi mốc baseline ~4.0 GiB sau khi unload model/reboot; VRAM chiếm ~2736 MiB; nhiệt độ CPU theo dõi có kiểm soát đạt peak 85°C (người vận hành ghi nhận peak ~91°C ở lượt chạy ban đầu); nhiệt độ GPU đạt peak 76°C; không ghi nhận bằng chứng về persistent memory leak hay thermal throttling trong lượt kiểm thử có kiểm soát.
+  4. **Canonical Versioning & Release Boundary:** Đồng bộ phiên bản package lên `0.1.0` tại `pyproject.toml`, `src/mowftee/__init__.py` và `config/model-manifest.yaml`. Gắn annotated tag Git `v0.1.0` đánh dấu mốc hoàn thành Phase 1 (Text Chat, Streaming & Benchmarks).
+  5. **Ranh giới Phase 2:** Hoàn tất Phase 1 mà không bắt đầu triển khai các tính năng của Phase 2 (Persona, Memory, Voice, Avatar, Tools).
+- **Reason:** Đảm bảo toàn bộ tiêu chí DoD của Phase 1 được xác minh bằng thực nghiệm và tài liệu hóa chuẩn xác trước khi phát hành `v0.1.0` và chuyển sang Phase 2.
+- **Revisit when:** Bắt đầu triển khai Phase 2 Persona Engine hoặc cập nhật baseline phần cứng.
+
+
+---
+
 ## 16. Recovery architecture
 
 Local encrypted backup/restore đã được triển khai ở G0-06A.
@@ -740,3 +755,40 @@ Fresh OS
 → run tests
 → start application
 ```
+
+---
+
+## 17. Architectural reference & design direction (AIRI / Sanbaka lessons)
+
+Các nguyên tắc thiết kế và định hướng kiến trúc tham khảo từ dự án Sanbaka / Project AIRI (chỉ mang tính chất tài liệu tham khảo kiến trúc, không phải cam kết triển khai hay thay đổi thứ tự Phase trong lộ trình):
+
+### 17.1 Nguyên tắc thiết kế kiến trúc
+
+1. **Phân tách subsystem độc lập và hợp tác:** Mowftee được tiếp cận như các hệ thống con hợp tác với nhau: Brain / Conversation, Persona-State, Memory, Voice, Tools, Body (Avatar).
+2. **Persona động thay vì prompt tĩnh:** Persona không được biến thành một prompt tĩnh khổng lồ duy nhất. Thiết kế tương lai tách biệt rõ:
+   - Core identity (nhận dạng cốt lõi)
+   - Current conversational state (trạng thái hội thoại hiện tại)
+   - Learned user preferences (tùy chọn người dùng học được)
+   - Familiarity / relationship context (bối cảnh mối quan hệ / độ quen thuộc)
+   - Current conversation context (ngữ cảnh hội thoại hiện tại)
+3. **Thích ứng người dùng dựa trên bằng chứng và độ tin cậy:** User adaptation phải dựa trên evidence/confidence. Một chỉ thị tạm thời của người dùng không được tự động biến thành sở thích vĩnh viễn nếu chưa có đủ bằng chứng.
+4. **Phân định rõ ranh giới khái niệm:**
+   - **Memory:** Những gì Mowftee biết (what Mowftee knows).
+   - **Persona:** Mowftee là ai (who Mowftee is).
+   - **Adaptation:** Mowftee tương tác với người dùng như thế nào (how Mowftee interacts with the user).
+5. **Phân loại bộ nhớ tương lai:** Kiến trúc bộ nhớ tương lai có thể phân định giữa:
+   - Working / session memory
+   - Stable user facts
+   - Preferences
+   - Episodic memories
+   - Task / project memory
+   Cơ chế hợp nhất (consolidation) và quên (forgetting) chỉ được bổ sung khi có lý do thực nghiệm rõ ràng.
+6. **Kiến trúc Voice hỗ trợ streaming và ngắt lời:** Kiến trúc thoại tương lai phải hỗ trợ streaming và cơ chế ngắt lời (interruption / barge-in), không đơn thuần là chuỗi tuyến tính STT -> LLM -> TTS.
+7. **Avatar / Body nhận tín hiệu trạng thái trừu tượng:** Body/Avatar tiêu thụ các tín hiệu trạng thái và biểu cảm trừu tượng (abstract expression/state signals), không trực tiếp parse raw LLM text hay liên kết cứng với `ConversationManager`.
+8. **Học tập khái niệm kiến trúc, không sao chép toàn bộ stack:** Học các khái niệm kiến trúc từ AIRI/Sanbaka thay vì bê nguyên toàn bộ stack của họ. Giữ vững định hướng Mowftee là Linux-first, local-first, Python modular monolith trừ khi có bằng chứng kỹ thuật rõ ràng chứng minh cần thay đổi.
+9. **Phát triển tính liên tục theo thời gian:** Mowftee nên phát triển tính liên tục (continuity) qua quá trình tương tác thay vì mô phỏng một tính cách hoàn chỉnh cố định ngay từ ngày đầu tiên.
+
+### 17.2 Phạm vi & Định vị companion
+
+- **Persona Companion:** Mowftee hiện tại có định hướng mang hình ảnh nữ (female-presenting AI companion), tuy nhiên Phase 2 mới là giai đoạn chịu trách nhiệm chính định nghĩa và hoàn thiện persona thực tế.
+- **Tính chất tham chiếu:** Đây là định hướng thiết kế và tài liệu tham khảo kiến trúc (design direction / reference), không phải cam kết triển khai ngay hay thay đổi thứ tự roadmap hiện tại. Sanbaka / AIRI chỉ đóng vai trò dự án tham chiếu.
