@@ -1,932 +1,219 @@
-# PLAN — Mowftee
+# PLAN — Mowftee Canonical Roadmap & DoD
 
-## 1. Thông tin tài liệu
-
-- **Dự án:** Mowftee
-- **Nền tảng chính:** CachyOS, Hyprland, Btrfs
-- **Trạng thái:** Giai đoạn 1 hoàn thành (`v0.1.0`); Giai đoạn 2 Persona là NEXT / NOT STARTED
-- **Mục tiêu release:** `v1.0.0`
-- **Ngôn ngữ tương tác chính:** Tiếng Việt
-- **Nguyên tắc:** Hoàn thành, kiểm thử, ghi log và commit từng bước trước khi chuyển tiếp
+- **Purpose:** Canonical roadmap, phase scope, dependencies, Definition of Done, risks, and non-goals.
+- **Authority:** Canonical for roadmap/DoD only.
+- **Audience:** HQ / worker / developer.
+- **Update trigger:** Roadmap, phase scope, dependency, DoD, risk, non-goal, or phase status changes.
+- **Must not contain:** Detailed benchmark evidence, historical command logs, raw hardware dumps, implementation transcripts, or duplicated architecture specs.
 
 ---
 
-## 2. Danh tính dự án
+## 1. Roadmap Position
 
-- **Tên chính thức:** Mowftee
-- **Cách đọc chính thức:** Maou-ph-ti
-- **Tên repository dự kiến:** `mowftee`
-- **Tên Python package dự kiến:** `mowftee`
-- **Lệnh CLI dự kiến:** `mowftee`
-- **Tên systemd service dự kiến:** `mowftee.service`
-- **Tiền tố biến môi trường:** `MOWFTEE_`
+- **Phase 0 — Project Foundation:** COMPLETE (`v0.0.1`)
+- **Phase 1 — Local Text Chat Core:** COMPLETE (`v0.1.0`)
+- **Phase 2 — Persona & Conversation Quality:** NEXT / NOT STARTED (`v0.2.x`)
+- **Phases 3–9:** Future roadmap (`v0.3.x` to `v1.0.0`)
 
-Tên Mowftee phải được dùng đồng bộ trong code, cấu hình, service, log, tài liệu và giao diện.
+*Note:* The current documentation refactor on `dev` branch is pre-Phase-2 repository maintenance and documentation normalization, not a new product phase. Git commit refs must be verified directly via Git.
 
 ---
 
-## 3. Mục tiêu dự án
+## 2. Project Vision & Non-Goals
 
-Xây dựng Mowftee — một AI companion chạy local — có phong cách trò chuyện tự nhiên và nhân cách riêng, lấy cảm hứng từ mô hình AI VTuber nhưng không sao chép tên, giọng, avatar hoặc tài sản của Neuro-sama.
+### Project Vision
+Mowftee is an open-source, local-first Vietnamese AI companion with a distinct personality, designed for CachyOS / Arch Linux.
 
-Hệ thống cuối cùng cần có:
-
-1. Hội thoại văn bản tiếng Việt.
-2. Persona ổn định và có thể chỉnh sửa.
-3. Trí nhớ dài hạn có thể xem, sửa, xóa và backup.
-4. Nhận giọng nói tiếng Việt.
-5. Tổng hợp giọng nói.
-6. Hỗ trợ ngắt lời trong hội thoại thời gian thực.
-7. Tool hỗ trợ CachyOS/Linux theo allowlist.
-8. Avatar có trạng thái nghe, nghĩ, nói và biểu cảm.
-9. Logging, benchmark, backup và restore.
-10. Có thể dựng lại sau khi cài lại Linux.
+### Non-Goals
+- Training LLMs from scratch.
+- Copying Neuro-sama or any existing VTuber identity, voice, avatar, or assets.
+- Executing arbitrary shell commands or unvetted `sudo` actions.
+- Exposing local AI APIs to the public Internet during early phases.
+- Running models exceeding local hardware capacity (RTX 3050 4 GB VRAM / 16 GB RAM).
+- Adding complex microservices, Docker, or Kubernetes overhead.
 
 ---
 
-## 4. Ngoài phạm vi
+## 3. Global Definition of Done & Release Gates
 
-Các nội dung sau không thuộc phạm vi ban đầu:
+Every phase must satisfy these consolidated completion gates before closure:
 
-- Train LLM từ đầu.
-- Sao chép Neuro-sama, giọng nói, avatar hoặc thương hiệu của người khác.
-- Đổi tên sản phẩm, package, CLI hoặc service mà không có migration và quyết định kỹ thuật mới.
-- Cho AI chạy shell tùy ý.
-- Tự động dùng `sudo`, xóa dữ liệu hoặc chỉnh bootloader.
-- Mở API AI ra Internet ở các giai đoạn đầu.
-- Đồng bộ toàn bộ hội thoại cá nhân lên GitHub.
-- Chạy model lớn vượt khả năng RTX 3050 4 GB.
-- Triển khai microservice, Kubernetes hoặc Docker khi chưa có nhu cầu thực tế.
+1. **Functional Scope:** Implemented all features defined for the phase.
+2. **Automated Testing:** Unit and integration test suite passes (`uv run pytest`, `uv run ruff check .`).
+3. **Performance & Resources:** Resource usage, latency, and TTFT measured and acceptable.
+4. **Stability:** No unresolved critical crashes, OOMs, or unhandled exceptions under standard runs.
+5. **Documentation:** Updated canonical documentation (`PLAN.md`, `SYSTEM_ARCHITECTURE.md`, `LOG.md`, `SESSION_PROMPT.md`) according to update triggers.
+6. **Recovery & Backup:** Backup and restore implications validated when non-reproducible data is introduced.
+7. **Version Control:** Clean Git state, committed code on `dev`, and annotated Git tag created (`vX.Y.Z`) when closing a milestone release phase.
 
 ---
 
-## 5. Baseline phần cứng đã xác nhận
+## 4. Phase Breakdown
 
-| Thành phần | Giá trị |
+### Phase 0 — Project Foundation (`v0.0.x`)
+
+- **Status:** COMPLETE
+- **Target Release:** `v0.0.1`
+- **Goal:** Establish repository structure, CPython 3.11 environment (`uv`), storage layout (`/srv/mowftee/models/ollama`), YAML configuration, JSONL logging, and local/off-machine encrypted backup capabilities.
+- **Delivered Outcome:** Tag `v0.0.1` released; local and Google Drive off-machine backup round-trip validated.
+- **Evidence:** Refer to [`LOG.md`](LOG.md).
+
+---
+
+### Phase 1 — Local Text Chat Core (`v0.1.x`)
+
+- **Status:** COMPLETE
+- **Target Release:** `v0.1.0`
+- **Goal:** Implement terminal text chat interface, local Ollama LLM provider (`OllamaLLMProvider`), streaming NDJSON responses, in-memory conversation manager (`ConversationManager`), default model selection (`qwen3:4b-instruct`), and comprehensive test/benchmark suite.
+- **Delivered Outcome:** Tag `v0.1.0` released; 5-minute soak, 20-turn functional, 50-turn stability, reboot persistence, and service recovery tests PASS; official benchmark artifact saved at `${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/benchmarks/g1-05-phase1-benchmark.json`.
+- **Evidence:** Refer to [`LOG.md`](LOG.md).
+
+---
+
+### Phase 2 — Persona & Conversation Quality (`v0.2.x`)
+
+- **Status:** NEXT / NOT STARTED
+- **Target Release:** `v0.2.0`
+- **Goal:** Create a distinct, consistent, natural Vietnamese persona for Mowftee without copying external identities.
+
+#### Approved Product & Persona Principles
+- Mowftee is a female-presenting AI companion, Vietnamese-first.
+- Natural, human-like interaction continuity supersedes raw intelligence benchmarks.
+- Neuro-sama is a behavioral/personality reference only, NOT an identity to copy.
+- Adaptation gradually learns user preferences using evidence/confidence/context, NOT continuous fine-tuning.
+- Subsystem separation: Persona (who Mowftee is), Memory (what Mowftee knows), and Adaptation (how Mowftee interacts) remain distinct concepts.
+
+#### Scope
+- Persona V1 specification (`persona_version: 1`).
+- Default Vietnamese forms of address.
+- Response length and playfulness/mischief parameters.
+- Graceful degradation on unknown topics ("I don't know" rather than hallucinating tool execution or fake facts).
+- Few-shot conversation examples.
+- Persona test suite (minimum 20 turns).
+- Catchphrase repetition prevention.
+
+#### Out of Scope (Strict Boundaries)
+- Persistent long-term memory (deferred to Phase 3).
+- Voice / STT / TTS (deferred to Phase 4 & 5).
+- Safe Linux tools (deferred to Phase 6).
+- Avatar & lip-sync (deferred to Phase 7).
+
+#### Gates & Dependencies
+- Phase 1 complete (`v0.1.0`).
+- Documentation refactor on `dev` branch complete.
+
+#### Definition of Done
+- [ ] Persona V1 defined (`persona_version: 1`).
+- [ ] Maintains consistent default Vietnamese forms of address across turns.
+- [ ] Does NOT revert to corporate/enterprise assistant tone.
+- [ ] Does NOT claim to be Neuro-sama or copy external assets.
+- [ ] Does NOT hallucinate unexecuted tool calls or fake memories.
+- [ ] Persona test suite (minimum 20 turns) PASS.
+- [ ] Release version `0.2.0` synchronized and tag `v0.2.0` created upon completion.
+
+---
+
+### Phase 3 — Persistent Memory (`v0.3.x`)
+
+- **Status:** FUTURE
+- **Target Release:** `v0.3.0`
+- **Goal:** Enable selective cross-session memory with user inspection, edit, delete, and backup capabilities.
+- **Scope:** SQLite memory store, schema migrations, selective memory extraction, user CRUD interface for memories, memory export/import/backup.
+- **Boundaries & Relationship to Persona:** Memory stores facts (what Mowftee knows), distinct from Persona (who Mowftee is). Must NOT automatically save all chat transcripts.
+- **Definition of Done:** Selective memory persists across restarts; CRUD interface functional; restore from backup PASS; database excluded from Git; tag `v0.3.0` created.
+
+---
+
+### Phase 4 — Per-Turn Voice (`v0.4.x`)
+
+- **Status:** FUTURE
+- **Target Release:** `v0.4.0`
+- **Goal:** Per-turn voice pipeline: Microphone -> VAD -> STT -> LLM -> TTS -> Speaker.
+- **Scope:** PipeWire audio integration, VAD benchmarking, Vietnamese STT/TTS selection, fallback to keyboard/text on audio failure.
+- **Definition of Done:** 20-turn voice test stable; STT/TTS latency measured; fallback graceful; tag `v0.4.0` created.
+
+---
+
+### Phase 5 — Real-Time Voice & Barge-In (`v0.5.x`)
+
+- **Status:** FUTURE
+- **Target Release:** `v0.5.0`
+- **Goal:** Real-time streaming voice with barge-in (interruption) support and echo prevention.
+- **Scope:** Sentence-chunked TTS streaming, audio queue management, cancellation tokens, barge-in detection (<= 300 ms target latency).
+- **Definition of Done:** Interruption latency <= 300 ms; no speaker-to-microphone feedback loops; voice module failure does not crash text chat; tag `v0.5.0` created.
+
+---
+
+### Phase 6 — Safe Linux Tools (`v0.6.x`)
+
+- **Status:** FUTURE
+- **Target Release:** `v0.6.0`
+- **Goal:** Allow Mowftee to perform safe, audited Linux tasks via allowlisted tools without arbitrary shell execution.
+- **Scope:** Privilege levels (L0 Chat to L4 System Change with confirmation), initial tools (`get_system_status`, `get_gpu_status`, `open_project`, `find_file`, `read_document`, `create_note`), parameter validation, timeouts, audit logging.
+- **Definition of Done:** No arbitrary shell tool; allowlist and audit log functional; dangerous actions require explicit confirmation; tag `v0.6.0` created.
+
+---
+
+### Phase 7 — Avatar & Expression (`v0.7.x`)
+
+- **Status:** FUTURE
+- **Target Release:** `v0.7.0`
+- **Goal:** Display an avatar reflecting Mowftee's conversational state (listening, thinking, speaking) and emotions.
+- **Scope:** PNGTuber / Live2D / VRM evaluation, audio-driven lip-sync, state machine integration.
+- **Definition of Done:** Avatar state reflects AI core state; avatar failure does not crash AI core; performance impact measured; tag `v0.7.0` created.
+
+---
+
+### Phase 8 — Resource Optimization & Stability (`v0.8.x`)
+
+- **Status:** FUTURE
+- **Target Release:** `v0.8.0`
+- **Goal:** Optimize memory retention, context trimming, model load/unload policies, and long-term stability.
+- **Scope:** 4-hour soak testing, crash recovery, database maintenance, Btrfs fragmentation review.
+- **Definition of Done:** No RAM leaks under 4-hour soak test; automatic recovery functional; tag `v0.8.0` created.
+
+---
+
+### Phase 9 — Packaging & System Recovery (`v1.0.0`)
+
+- **Status:** FUTURE
+- **Target Release:** `v1.0.0`
+- **Goal:** Package full application with automated setup, diagnostic, backup, and full system disaster recovery scripts.
+- **Scope:** Complete helper scripts (`doctor.sh`, `setup-python.sh`, `download-models.sh`, `backup.sh`, `restore.sh`), clean OS restoration workflow.
+- **Definition of Done:** Application, memory, persona, and models fully restored from clean OS installation using documented recovery sequence; tag `v1.0.0` created.
+
+---
+
+## 5. Backup & Recovery Policy
+
+- **Requirement:** Private/non-reproducible data (custom persona, memory database, real config, custom voice/LoRA) MUST be backed up off-machine.
+- **Validation:** Every backup implementation requires local and off-machine restore validation.
+- **Directory Convention:** `$HOME/Mowftee Backups/Phase N - vX.Y.Z/` is recommended for operator off-machine storage organization. This is an operator convention, NOT a hard-coded application runtime path.
+- **Public Models:** Reproducible public Ollama models are excluded from backup payloads.
+- **Status:** Phase 1 `v0.1.0` off-machine backup validation is COMPLETE.
+
+Refer to Recovery Architecture in [`SYSTEM_ARCHITECTURE.md`](SYSTEM_ARCHITECTURE.md) and [`LOG.md`](LOG.md).
+
+---
+
+## 6. Key System Risks & Mitigations
+
+| Risk | Mitigation Strategy |
 |---|---|
-| Máy | ASUS TUF Gaming F15 FX507ZC4 |
-| CPU | Intel Core i5-12500H, 12 nhân, 16 luồng |
-| GPU | NVIDIA GeForce RTX 3050 Mobile, 4 GB VRAM |
-| iGPU | Intel Iris Xe |
-| RAM | 16 GB |
-| Swap | ZRAM khoảng 15.24 GB, zstd |
-| Ổ đĩa | NVMe 476.94 GiB |
-| Btrfs đang dùng | Phân vùng 300 GiB |
-| Dung lượng Btrfs còn trống | Khoảng 283–284 GiB |
-| Desktop | Hyprland trên Wayland |
-| Audio | PipeWire + WirePlumber |
-| Python hệ thống | 3.14.6 |
-| Git | 2.55.0 |
-| Ollama | Chưa cài |
-| NVIDIA driver | 610.57.04 |
-| CUDA UMD | 13.3 |
-
-Thông số chi tiết nằm trong `config/hardware-baseline.txt`.
+| 4 GB VRAM / 16 GB RAM limitation | Limit model scale to 3B–4B quantized models; CPU offload when necessary. |
+| System Python version drift | Enforce dedicated CPython 3.11 environment managed by `uv`. |
+| Unvetted shell execution hazards | Strict tool allowlist, parameter validation, confirmation dialogs, audit logs. |
+| Model files inflating system snapshots | Store models outside root snapshot under `/srv/mowftee/models/ollama/`. |
+| Database corruption or data loss | Consistent SQLite backups (`sqlite3.Connection.backup()`) and restore tests. |
 
 ---
 
-## 6. Kiến trúc tổng quan
-
-```text
-Keyboard / Microphone
-          │
-          ▼
-      Input Layer
-    ├── Text input
-    ├── VAD
-    └── STT
-          │
-          ▼
- Conversation Manager
-    ├── Persona Manager
-    ├── Context Manager
-    ├── Memory Provider
-    ├── State Machine
-    ├── Safety Layer
-    └── Tool Manager
-          │
-          ▼
-      LLM Provider
-          │
-          ├── Text output
-          ├── TTS Provider
-          └── Avatar Bridge
-```
-
-Kiến trúc ban đầu là **modular monolith**: một ứng dụng Python, các module tách rõ interface nhưng chưa tách thành nhiều service.
-
----
-
-## 7. Quy tắc kiến trúc
-
-1. Mỗi engine phải thay thế được qua provider/interface.
-2. Không hard-code model, đường dẫn hoặc tham số máy trong logic.
-3. Module lỗi phải hạ cấp chức năng thay vì làm sập toàn hệ thống.
-4. Tool Linux phải có schema, allowlist, timeout và audit log.
-5. Không truyền trực tiếp văn bản người dùng vào shell.
-6. Mọi dữ liệu cá nhân nằm ngoài Git.
-7. Model công khai tải lại được không cần backup bắt buộc.
-8. Model tự fine-tune và voice tự tạo phải backup.
-9. Mỗi thay đổi lớn phải có quyết định kỹ thuật trong Decision Log.
-10. Chỉ tối ưu sau khi có benchmark; không tối ưu theo cảm tính.
-
----
-
-## 8. Bố trí dữ liệu
-
-### 8.1 Source code
-
-```text
-$HOME/Projects/mowftee/
-```
-
-### 8.2 Cấu hình người dùng
-
-```text
-$HOME/.config/mowftee/
-```
-
-### 8.3 Dữ liệu cần giữ
-
-```text
-$HOME/.local/share/mowftee/
-├── memory/
-├── conversations/
-├── voices/
-└── user-data/
-```
-
-### 8.4 Log và benchmark
-
-```text
-$HOME/.local/state/mowftee/
-├── logs/
-├── audit/
-└── benchmarks/
-```
-
-### 8.5 Cache
-
-```text
-$HOME/.cache/mowftee/
-```
-
-### 8.6 Model tải lại được
-
-Đường dẫn ưu tiên:
-
-```text
-/srv/mowftee/models/ollama/
-```
-
-Lý do:
-
-- `/srv` đã là subvolume Btrfs riêng `@srv`.
-- Tránh để model lớn nằm trực tiếp trong root subvolume `@`.
-- Dễ tách khỏi snapshot hệ thống.
-- Dễ cấp quyền cho service Ollama.
-
-Trước khi dùng phải xác minh chính sách snapshot hiện tại có bao gồm `@srv` hay không. Nếu `@srv` bị snapshot thường xuyên, tạo child subvolume riêng cho model.
-
----
-
-## 9. Ngân sách tài nguyên ban đầu
-
-Các giá trị dưới đây là mục tiêu, chưa phải kết quả benchmark.
-
-### 9.1 LLM
-
-| Chỉ số | Mục tiêu |
-|---|---:|
-| Quy mô model khởi đầu | 3B–4B, quantized |
-| Context ban đầu | 4096 token |
-| Time to first token | ≤ 4 giây |
-| Tốc độ sinh | ≥ 10 token/giây |
-| Phiên kiểm thử | 50 lượt không crash |
-| VRAM | Không OOM |
-| RAM trống tối thiểu khi chạy | 3 GB |
-| Thời gian chạy ổn định | 60 phút |
-
-### 9.2 Voice
-
-| Chỉ số | Mục tiêu |
-|---|---:|
-| Phát hiện bắt đầu nói | ≤ 250 ms |
-| Phát hiện kết thúc nói | 400–900 ms |
-| STT câu ngắn | ≤ 2 giây |
-| TTS bắt đầu phát | ≤ 1.5 giây |
-| Dừng TTS khi ngắt lời | ≤ 300 ms |
-| Tổng độ trễ cảm nhận | ≤ 4 giây |
-
-### 9.3 Phân bổ dự kiến
-
-- **RTX 3050:** ưu tiên LLM.
-- **CPU:** STT vòng đầu, VAD, TTS nhẹ, memory và tool.
-- **Intel Iris Xe:** desktop/Hyprland; avatar có thể ưu tiên iGPU nếu phần mềm cho phép.
-- **ZRAM:** chỉ là vùng đệm khi thiếu RAM, không được xem là RAM thay thế cho model lớn.
-
----
-
-## 10. Cổng hoàn thành chung
-
-Mỗi giai đoạn phải đạt đủ:
-
-- **G1 — Functional:** chức năng hoạt động.
-- **G2 — Test:** bộ kiểm thử đạt.
-- **G3 — Performance:** chỉ số được đo và đạt hoặc có giải thích.
-- **G4 — Stability:** không còn lỗi nghiêm trọng chưa xử lý.
-- **G5 — Documentation:** tài liệu đã cập nhật.
-- **G6 — Version control:** đã commit; release quan trọng có tag.
-
----
-
-# 11. Lộ trình triển khai
-
-## Giai đoạn 0 — Nền móng dự án (`v0.0.x`)
-
-### Mục tiêu
-
-Chuẩn hóa repo, môi trường, dữ liệu, log, backup và khả năng tái tạo trước khi viết lõi AI.
-
-### Phụ thuộc
-
-Không có.
-
-### Bước G0-01 — Thu thập baseline
-
-- **Trạng thái:** Hoàn thành.
-- **Đầu vào:** CachyOS đang chạy.
-- **Đầu ra:** `config/hardware-baseline.txt`.
-- **Kiểm tra:** file chứa CPU, GPU, RAM, Btrfs, audio và package.
-- **Rollback:** Không cần.
-
-### Bước G0-02 — Tạo repository và cấu trúc tối thiểu
-
-- **Trạng thái:** Hoàn thành.
-
-Quy ước định danh bắt buộc:
-
-```text
-Product     : Mowftee
-Pronounce   : Maou-ph-ti
-Repository  : mowftee
-Package     : mowftee
-CLI         : mowftee
-Service     : mowftee.service
-Config path : ~/.config/mowftee
-Data path   : ~/.local/share/mowftee
-State path  : ~/.local/state/mowftee
-Cache path  : ~/.cache/mowftee
-Model path  : /srv/mowftee/models/ollama
-```
-
-Tạo:
-
-```text
-mowftee/
-├── src/
-├── prompts/
-├── config/
-├── tests/
-├── scripts/
-├── docs/
-├── pyproject.toml
-├── .gitignore
-├── LICENSE
-└── README.md
-```
-
-Tiêu chí hoàn thành:
-
-- Repo Git `mowftee` hoạt động.
-- Không có dữ liệu cá nhân trong staging.
-- Commit đầu tiên được tạo.
-- Remote GitHub chỉ thêm sau khi kiểm tra `.gitignore`.
-
-Kết quả:
-
-- Repository cục bộ và nhánh `main` hoạt động.
-- Cấu trúc tối thiểu, `.gitignore`, `pyproject.toml` và `LICENSE` đã có.
-- Python version, build backend và dependency được để lại cho G0-03.
-- Không có model, memory, secret, audio cá nhân hoặc runtime log trong staging.
-
-### Bước G0-03 — Chốt môi trường Python
-
-- **Trạng thái:** Hoàn thành.
-
-Yêu cầu:
-
-- Không cài package AI trực tiếp vào Python hệ thống.
-- Tạo virtual environment riêng.
-- Khóa phiên bản Python dùng cho project.
-- Chọn phiên bản Python sau khi kiểm tra compatibility của dependency.
-- Python hệ thống 3.14.6 không mặc định trở thành Python của project.
-
-Đầu ra:
-
-- `pyproject.toml`.
-- Lock file.
-- Script `scripts/setup-python.sh`.
-- `python --version` trong venv được ghi log.
-
-Kết quả:
-
-- Project dùng CPython `>=3.11,<3.12`; môi trường thực tế được kiểm tra với Python 3.11.15.
-- `uv` quản lý interpreter, dependency và virtual environment `.venv/`.
-- Python hệ thống 3.14.6 không được dùng để cài dependency project.
-- Dependency khai báo trong `pyproject.toml`; `uv.lock` được commit.
-- Môi trường được tái tạo bằng `uv sync --locked` qua `scripts/setup-python.sh`.
-- `uv lock --check`, sync locked, import, pytest và Ruff đều đạt.
-
-### Bước G0-04 — Chốt storage layout
-
-- **Trạng thái:** Hoàn thành.
-
-Kiểm tra:
-
-- Chính sách snapshot cho `@`, `@home`, `@srv`.
-- Quyền ghi của user/service Ollama.
-- Dung lượng trống.
-- Có cần child subvolume model hay không.
-
-Đầu ra:
-
-- Đường dẫn model cuối cùng.
-- Đường dẫn memory và log.
-- Script tạo thư mục và quyền.
-- Decision Log cập nhật.
-
-Kết quả:
-
-- XDG paths dùng biến môi trường với giá trị mặc định, không hard-code user.
-- Các thư mục config, data, state và cache của Mowftee có owner là user hiện tại và mode `0700`.
-- Model path cuối cùng là `/srv/mowftee/models/ollama`; parent `/srv/mowftee/models` là `root:root 0755`.
-- `@srv` hiện không bị snapshot tự động; không tạo child Btrfs subvolume cho model.
-- Public model không cần backup. Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy ở G0-06.
-- Thư mục model Ollama được hoãn tạo với owner `ollama:ollama` và mode `0750` cho đến khi user/group Ollama tồn tại ở bước cài runtime.
-- `scripts/setup-storage.sh` chạy lặp lại an toàn và không tạo file runtime.
-
-### Bước G0-05 — Thiết lập cấu hình và logging
-
-- **Trạng thái:** Hoàn thành.
-
-Tạo:
-
-```text
-config/default.yaml
-config/example.yaml
-src/mowftee/config.py
-src/mowftee/logging_setup.py
-```
-
-Log:
-
-```text
-app.jsonl
-performance.jsonl
-audit.jsonl
-```
-
-Tiêu chí:
-
-- Cấu hình sai phải báo lỗi rõ.
-- Secret không được ghi log.
-- Log có timestamp và request ID.
-
-Kết quả:
-
-- Schema cấu hình ban đầu dùng YAML với `config_schema_version: 1`; PyYAML là runtime dependency được khóa trong `uv.lock`.
-- Thứ tự ưu tiên là default → user config XDG → biến môi trường `MOWFTEE_` → CLI override.
-- Loader hỗ trợ nested merge, parse scalar từ biến môi trường, validation và exception riêng mà không ghi toàn bộ cấu hình.
-- Default YAML được đóng gói làm package resource để loader hoạt động cả từ source checkout và wheel đã cài.
-- Logging JSONL tách ba kênh app, performance và audit dưới XDG state path; có UTC timestamp, UUID request context, rotation và quyền file `0600`.
-- Secret và nội dung riêng tư bị redact mặc định; lỗi file handler hạ cấp sang console mà không làm ứng dụng crash.
-- Config/logging test và smoke test đều dùng XDG tạm; không tạo user config hoặc runtime log thật.
-
-### Bước G0-06 — Thiết lập backup tối thiểu
-
-G0-06 được chia thành hai phần:
-
-#### G0-06A — Local encrypted backup/restore tooling
-
-- **Trạng thái:** Hoàn thành trên nhánh `wip/g0-06a-backup`.
-- Tạo `scripts/backup.sh`, `scripts/restore.sh` và `src/mowftee/backup.py`.
-- Archive dùng tar gzip, mã hóa đối xứng GPG AES-256 và có sidecar SHA-256.
-- Manifest và checksum nội bộ dùng để xác minh payload trước khi restore.
-- SQLite được snapshot nhất quán bằng `sqlite3.Connection.backup()`.
-- Restore chỉ cho phép đích mới, kiểm tra path traversal, loại file nguy hiểm và checksum.
-- Archive hiện chỉ có trạng thái `local_staging`; chưa được coi là backup ngoài máy.
-- Kiểm tra đạt: Bash syntax, lock/sync, Ruff, 45 test backup, 84 full test, diff check và wheel smoke test.
-
-#### G0-06B — Backup ngoài máy
-
-- **Trạng thái:** Hoàn thành.
-- Google Drive riêng tư được dùng làm off-machine target.
-- Full round-trip đã được xác minh với archive `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`: production backup → checksum → local restore sanity test → upload → xóa local original → download → checksum → restore → đối chiếu config.
-- Chọn target cloud hoặc thiết bị ngoài máy.
-- Upload archive mã hóa và sidecar checksum.
-- Xác minh tải xuống và restore từ target ngoài máy.
-- Snapshot Btrfs hoặc archive nằm cùng NVMe không được coi là backup ngoài máy.
-
-Backup bắt buộc khi dữ liệu tồn tại:
-
-- Config thật.
-- Persona.
-- Memory.
-- Voice/model tự tạo.
-- LoRA tự tạo.
-- Tài liệu RAG riêng.
-
-Backup tùy chọn:
-
-- Conversation history.
-- Audit log.
-- Benchmark quan trọng.
-
-Không backup bắt buộc:
-
-- Model Ollama công khai.
-- Cache.
-- Runtime log thông thường.
-- Audio tạm.
-- Source code đã có trên GitHub.
-
-### Definition of Done Giai đoạn 0
-
-- [x] Có baseline phần cứng.
-- [x] Repo và `.gitignore` chuẩn.
-- [x] Python environment được khóa.
-- [x] Storage layout được xác minh.
-- [x] Config schema ban đầu.
-- [x] Logging hoạt động.
-- [x] G0-06A local encrypted backup/restore và restore test thành công.
-- [x] G0-06B backup ngoài máy được xác minh.
-- [x] Commit và tag `v0.0.1`.
-
----
-
-## Giai đoạn 1 — Lõi hội thoại văn bản (`v0.1.x`)
-
-### Mục tiêu
-
-Chat local trong terminal, streaming, giữ ngữ cảnh trong phiên và có benchmark.
-
-### Bước G1-01 — Cài runtime LLM
-
-- **Trạng thái:** Hoàn thành.
-- **Packages:** `ollama` 0.32.6-1.1 + `ollama-vulkan` 0.32.6-1.1 (CachyOS native).
-- **Backend/GPU:** Vulkan trên RTX 3050 Laptop 4GB.
-- **Service:** `ollama.service` (`ollama:ollama`), `enabled` và `active`, boot persistence PASS.
-- **Bind:** `127.0.0.1:11434` (localhost-only).
-- **Model Storage:** `/srv/mowftee/models/ollama` (`ollama:ollama 0750`).
-- **Validation Model:** `qwen3:0.6b` (digest `7df6b6e09427`, 522 MB) chạy 100% GPU via Vulkan (smoke test validation only, KHÔNG phải default/winner model).
-
-Kiểm tra:
-
-- Service khởi động.
-- API chỉ bind local.
-- GPU được sử dụng.
-- Model path đúng storage layout.
-- Sau reboot service vẫn hoạt động theo cấu hình đã chọn.
-
-Rollback:
-
-- Dừng service.
-- Gỡ package.
-- Xóa override systemd.
-- Không xóa model nếu người dùng chưa xác nhận.
-
-### Bước G1-02 — Benchmark model ứng viên
-
-- **Trạng thái:** Hoàn thành.
-- **Default Selected:** `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`, 4.0B parameters).
-- **Performance Fallback:** `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`, 3.2B parameters).
-- **Chỉ số & Bằng chứng thực nghiệm:**
-  - `qwen3:4b-instruct`: TTFT streaming ~0.188s (target < 4.0s), tốc độ trung bình 50 lượt 31.95 tok/s, hoàn thành 50/50 lượt, 0 lỗi instruction, 0 lỗi reasoning, 0 lỗi context/recall, 0 hallucination.
-  - `llama3.2:3b`: TTFT streaming ~0.206s (target < 4.0s), tốc độ trung bình 50 lượt 68.20 tok/s, hoàn thành 50/50 lượt, nhưng có 2 lỗi instruction, 1 lỗi reasoning toán học và 1 lỗi hallucination safety trigger.
-
-Ứng viên đã benchmark:
-
-- `qwen3:1.7b` (quantized 2.0B)
-- `llama3.2:3b` (quantized 3.2B)
-- `qwen3:4b-instruct` (quantized 4.0B)
-- *Lưu ý dọn dẹp:* Các mô hình thử nghiệm không còn sử dụng (`qwen3:0.6b`, `qwen3:1.7b`, `qwen3:4b`) đã được dọn dẹp khỏi Ollama runtime sau closure.
-
-### Bước G1-03 — Viết LLM Provider
-
-- **Trạng thái:** Hoàn thành.
-- **Base types & Protocol:** `src/mowftee/llm/base.py` (`ChatMessage`, `LLMResponse`, `LLMStreamChunk`, `LLMMetrics`, exception hierarchy `LLMError`/`LLMConnectionError`/`LLMTimeoutError`/`LLMResponseError`/`LLMCancelledError`, `@runtime_checkable` `LLMProvider` Protocol).
-- **Implementation:** `src/mowftee/llm/ollama.py` (`OllamaLLMProvider` giao tiếp qua stdlib `urllib.request` HTTP REST API).
-- **Capabilities implemented:**
-  - `health_check()`: GET `/api/version` kiểm tra dịch vụ sẵn sàng với `health_timeout`, không ném exception ra ngoài.
-  - `chat()`: POST `/api/chat` non-streaming với input validation, request context, timing/token metrics, và error mapping.
-  - `stream_chat()`: POST `/api/chat` streaming NDJSON với strict validation, chunk model consistency, và real TTFT timing.
-  - `cancel()`: Hủy thread-safe request đang active qua `_active_requests` registry và `_cancelled_requests` state; thực hiện `response.close()` ngoài lock.
-  - `get_metrics()`: Trả về snapshot copy độc lập của `LLMMetrics`.
-- **Runtime Config Source:** `config/default.yaml` (`llm` section). `config/model-manifest.yaml` KHÔNG được đọc ở runtime.
-- **Unit Tests:** `tests/test_llm_base.py`, `tests/test_llm_provider.py` (43 unit tests).
-- **Real Ollama Smoke Test:** PASS với `qwen3:4b-instruct` (health_check ~6.95ms, non-stream chat PASS, stream chat PASS TTFT ~304.73ms & ~39.33 tok/s, cancellation PASS, metrics final total=3, success=2, failed=1).
-- **Manual Chat Finding:** Interactive chat script xác nhận `OllamaLLMProvider` hoạt động mượt mà end-to-end; behavior thô của default model (đổi ngôn ngữ, giọng trợ lý chung) là bình thường do chưa có persona/context policy của G1-04.
-- **Extension Status:** Ý tưởng lệnh CLI `mow` và TUI terminal interface là planned extension, KHÔNG thuộc scope G1-03 và chưa được triển khai.
-
-### Bước G1-04 — Conversation Manager
-
-- **Trạng thái:** Hoàn thành.
-- **Base types & Exceptions:** `src/mowftee/conversation/base.py` (`ConversationError`, `ConversationBusyError`).
-- **Implementation:** `src/mowftee/conversation/manager.py` (`ConversationManager` với `chat()`, `stream_chat()`, `get_history()`, `clear_history()`, `cancel_current_turn()`, `@property session_id`).
-- **Capabilities implemented:**
-  - System message / policy khởi đầu tiếng Việt tự nhiên và hỗ trợ tiêm ISO local datetime tự động vào context động (`inject_datetime: true`).
-  - Lịch sử hội thoại trong RAM được bảo vệ theo giao thức atomic turn commit (chỉ commit cặp `user` + `assistant` khi turn thành công).
-  - Giới hạn context window theo `max_turns` cặp gần nhất, không tự xoá lịch sử gốc trong RAM.
-  - Lệnh thoát (`/exit`, `/quit`) và xoá lịch sử (`/reset`, `/clear`).
-  - Hủy phản hồi turn hiện tại qua `cancel_current_turn()`, tự động ngắt HTTP stream socket và không lưu assistant output dở dang.
-  - Minimal terminal runner: `src/mowftee/cli.py` & `scripts/chat.sh` hỗ trợ tương tác hội thoại trực tiếp ra terminal.
-- **Unit Tests:** `tests/test_conversation.py` (21 unit tests), `tests/test_cli.py` (4 unit tests), tổng bộ test đạt 180 passed.
-- **Real Ollama Smoke Test:** PASS với `qwen3:4b-instruct` (health_check ~1.57ms, non-stream turn 1 PASS, stream turn 2 TTFT ~292.12ms & ~34.95 tok/s với câu trả lời ngày tháng 100% chuẩn xác '8/8/2026', turn 3 cancellation PASS, clear_history PASS, metrics final total=3, success=2, failed=1).
-
-### Bước G1-05 — Test và benchmark
-
-- **Trạng thái:** Hoàn thành (COMPLETE).
-
-Chức năng & Yêu cầu:
-
-- Smoke test 5 phút.
-- Functional test 20 lượt.
-- Stability test 50 lượt hoặc 60 phút.
-- Reboot test.
-- Recovery test khi service Ollama bị dừng.
-
-### Definition of Done Giai đoạn 1
-
-- [x] Chat terminal hoạt động.
-- [x] Streaming hoạt động.
-- [x] Model dùng GPU hoặc có lý do rõ ràng nếu không.
-- [x] 50 lượt không crash.
-- [x] Benchmark được lưu.
-- [x] Không hard-code model/path.
-- [x] Tag `v0.1.0`.
-
----
-
-## Giai đoạn 2 — Persona và chất lượng hội thoại (`v0.2.x`)
-
-### Mục tiêu
-
-Tạo nhân vật riêng, nhất quán, tự nhiên và không sao chép Neuro-sama.
-
-### Công việc
-
-- Chốt tên nhân vật.
-- Viết persona version 1.
-- Xưng hô mặc định.
-- Quy tắc độ dài.
-- Mức tinh nghịch.
-- Phản ứng khi không biết.
-- Không giả vờ đã chạy tool.
-- Few-shot examples.
-- Bộ test persona tối thiểu 20 lượt.
-- Chống lặp câu cửa miệng.
-
-### Definition of Done
-
-- [ ] Giữ cách xưng hô.
-- [ ] Không đổi sang giọng trợ lý doanh nghiệp.
-- [ ] Không tự nhận là Neuro-sama.
-- [ ] Không bịa ký ức.
-- [ ] Điểm persona đạt ngưỡng đã chốt.
-- [ ] `persona_version: 1`.
-- [ ] Tag `v0.2.0`.
-
----
-
-## Giai đoạn 3 — Memory (`v0.3.x`)
-
-### Mục tiêu
-
-Nhớ qua nhiều lần khởi động nhưng người dùng vẫn kiểm soát được dữ liệu.
-
-### Thiết kế
-
-```text
-Short-term context
-Long-term explicit memory
-Conversation summaries
-Retrieval
-```
-
-### Công việc
-
-- SQLite schema.
-- Migration.
-- Lưu memory có chọn lọc.
-- Không tự lưu mọi nội dung.
-- Xem memory.
-- Sửa memory.
-- Xóa memory.
-- Export/import.
-- Backup/restore.
-- Chống trùng lặp.
-- Gắn nguồn và thời gian.
-
-### Definition of Done
-
-- [ ] Mở lại ứng dụng vẫn nhớ memory đã chọn.
-- [ ] Xem/sửa/xóa được.
-- [ ] Restore thành công.
-- [ ] Database không vào Git.
-- [ ] Migration chạy được.
-- [ ] Tag `v0.3.0`.
-
----
-
-## Giai đoạn 4 — Voice theo lượt (`v0.4.x`)
-
-### Mục tiêu
-
-Micro → STT → LLM → TTS → loa theo từng lượt.
-
-### Công việc
-
-- Kiểm tra và unmute source PipeWire.
-- Chọn thiết bị input/output ổn định.
-- Benchmark VAD.
-- Benchmark STT tiếng Việt.
-- Chọn TTS sau kiểm thử phát âm.
-- Quản lý audio tạm.
-- Fallback sang bàn phím khi STT lỗi.
-- Fallback sang text khi TTS lỗi.
-
-### Definition of Done
-
-- [ ] Nhận câu tiếng Việt thông thường.
-- [ ] Không kích hoạt liên tục vì tiếng quạt.
-- [ ] TTS rõ.
-- [ ] 20 lượt voice ổn định.
-- [ ] Độ trễ được ghi.
-- [ ] Tag `v0.4.0`.
-
----
-
-## Giai đoạn 5 — Voice thời gian thực (`v0.5.x`)
-
-### Mục tiêu
-
-Phản hồi sớm, có thể ngắt lời và không tự nghe chính mình.
-
-### Công việc
-
-- Streaming LLM sang TTS.
-- Sentence chunking.
-- Audio queue.
-- Barge-in.
-- Cancel token generation.
-- Echo prevention.
-- State machine hoàn chỉnh.
-- Xử lý khoảng lặng.
-
-### Definition of Done
-
-- [ ] Ngắt lời ≤ 300 ms theo mục tiêu.
-- [ ] Không nói chồng.
-- [ ] Không vòng lặp loa → micro.
-- [ ] Module voice lỗi không làm sập text chat.
-- [ ] Tag `v0.5.0`.
-
----
-
-## Giai đoạn 6 — Tool Linux (`v0.6.x`)
-
-### Mục tiêu
-
-Hỗ trợ tác vụ thực tế nhưng không có shell tự do.
-
-### Mức quyền
-
-- L0: chỉ chat.
-- L1: đọc trạng thái hệ thống.
-- L2: mở app/file.
-- L3: ghi trong workspace cho phép.
-- L4: thay đổi hệ thống; bắt buộc xác nhận.
-- L5: cấm.
-
-### Tool đầu tiên
-
-- `get_system_status`
-- `get_gpu_status`
-- `open_project`
-- `find_file`
-- `read_document`
-- `create_note`
-
-### Yêu cầu
-
-- Schema rõ.
-- Validate tham số.
-- Timeout.
-- Audit log.
-- Confirm policy.
-- Không retry tool nguy hiểm.
-- Không gửi dữ liệu ra ngoài.
-
-### Definition of Done
-
-- [ ] Không có `run_shell(user_input)`.
-- [ ] Allowlist hoạt động.
-- [ ] Audit log hoạt động.
-- [ ] Hành động thay đổi cần xác nhận.
-- [ ] Tag `v0.6.0`.
-
----
-
-## Giai đoạn 7 — Avatar (`v0.7.x`)
-
-### Mục tiêu
-
-Avatar phản ánh trạng thái AI mà không ảnh hưởng mạnh tới LLM.
-
-### Thứ tự
-
-1. PNGTuber.
-2. Listening/thinking/speaking state.
-3. Lip-sync theo âm lượng.
-4. Biểu cảm.
-5. Live2D hoặc VRM nếu tài nguyên cho phép.
-6. OBS integration nếu cần.
-
-### Definition of Done
-
-- [ ] Trạng thái đúng.
-- [ ] Lip-sync hoạt động.
-- [ ] Avatar lỗi không làm sập AI Core.
-- [ ] Benchmark khi bật/tắt avatar.
-- [ ] Tag `v0.7.0`.
-
----
-
-## Giai đoạn 8 — Tối ưu và ổn định (`v0.8.x`)
-
-### Công việc
-
-- Context trimming.
-- Model load/unload.
-- Resource policy.
-- Crash recovery.
-- Log rotation.
-- Database maintenance.
-- Test sau update package.
-- Soak test tối thiểu 4 giờ.
-- Đánh giá Btrfs fragmentation dựa trên số liệu.
-
-### Definition of Done
-
-- [ ] Không tăng RAM vô hạn.
-- [ ] Không OOM trong cấu hình mặc định.
-- [ ] Module recovery đạt.
-- [ ] Soak test đạt.
-- [ ] Tag `v0.8.0`.
-
----
-
-## Giai đoạn 9 — Đóng gói và hồi sinh (`v1.0.0`)
-
-### Script bắt buộc
-
-```text
-doctor.sh
-install-system.sh
-setup-python.sh
-download-models.sh
-benchmark.sh
-backup.sh
-restore.sh
-uninstall.sh
-```
-
-### Quy trình phục hồi
-
-```text
-Cài CachyOS/Linux
-→ clone repo
-→ chạy doctor
-→ cài dependency
-→ tải model theo manifest
-→ restore dữ liệu
-→ kiểm thử
-→ chạy AI
-```
-
-### Definition of Done
-
-- [ ] Dựng lại từ hệ thống sạch.
-- [ ] Memory khôi phục.
-- [ ] Persona và config khôi phục.
-- [ ] Model đúng digest/manifest.
-- [ ] Không cần dữ liệu ngoài backup đã khai báo.
-- [ ] Release `v1.0.0`.
-
----
-
-## 12. State machine
-
-```text
-STARTING
-  └── IDLE
-       ├── LISTENING
-       ├── TRANSCRIBING
-       ├── THINKING
-       ├── TOOL_RUNNING
-       ├── WAITING_CONFIRMATION
-       ├── SPEAKING
-       ├── INTERRUPTED
-       └── ERROR
-SHUTTING_DOWN
-```
-
-Mỗi trạng thái phải quyết định rõ:
-
-- Micro có hoạt động không.
-- TTS có phát không.
-- LLM request có thể bị hủy không.
-- Tool có được phép chạy không.
-- Avatar hiển thị gì.
-- Log sự kiện nào.
-
----
-
-## 13. Logging
-
-### `app.jsonl`
-
-- Startup/shutdown.
-- Module load.
-- State transition.
-- Error/recovery.
-- Timeout.
-
-### `performance.jsonl`
-
-- Model.
-- Input/output token.
-- Time to first token.
-- Token/giây.
-- Tổng thời gian.
-- RAM/VRAM/CPU/GPU.
-
-### `audit.jsonl`
-
-- Tool.
-- Tham số đã lọc.
-- Quyền.
-- Xác nhận.
-- Kết quả.
-- Mã lỗi.
-- Thời lượng.
-
-Không ghi secret hoặc toàn bộ file nhạy cảm.
-
----
-
-## 14. Backup
-
-| Dữ liệu | Git | Backup riêng | Tải lại được |
-|---|---:|---:|---:|
-| Source | Có | GitHub | Có |
-| Persona | Có | GitHub | Có |
-| Config mẫu | Có | GitHub | Có |
-| Config thật | Không | Có | Không |
-| Memory | Không | Bắt buộc | Không |
-| Hội thoại | Không | Tùy chọn | Không |
-| Model công khai | Không | Không bắt buộc | Có |
-| LoRA tự tạo | Không | Bắt buộc | Không |
-| Voice tự tạo | Không | Bắt buộc | Không |
-| Cache | Không | Không | Có |
-| Secret | Không | Backup mã hóa | Không |
-
-Snapshot cùng ổ không được coi là backup.
-
----
-
-## 15. Rủi ro chính
-
-| Rủi ro | Cách xử lý |
-|---|---|
-| VRAM 4 GB không đủ | Model nhỏ hơn, giảm context, CPU offload |
-| RAM 16 GB bị áp lực | Unload module, giới hạn context, tránh model lớn |
-| Python hệ thống quá mới | Dùng project Python riêng |
-| TTS tiếng Việt kém | Benchmark trước khi chốt |
-| Micro thu tiếng loa | Barge-in + echo prevention + thiết bị phù hợp |
-| Model phình snapshot | Lưu ngoài root snapshot |
-| Memory hỏng/mất | Backup nhất quán + restore test |
-| Tool gây hại | Schema + allowlist + confirm + audit |
-| Update rolling release gây lỗi | Lock dependency, log version, snapshot trước thay đổi lớn |
-| Dự án mất ngữ cảnh giữa các chat | Dùng SESSION_PROMPT.md + LOG.md |
-
----
-
-## 16. Việc cần làm tiếp theo
-
-**Bước hiện tại:** Giai đoạn 0 đã hoàn thành và release `v0.0.1` đã được đóng tại commit `794ba78`.
-
-Task Pre-G1 metadata sync và chốt version policy COMPLETE (canonical: `pyproject.toml`, dev version: `0.1.0.dev0`); G1-01 NEXT / NOT STARTED.
-
-**Bước tiếp theo:** `G1-01 — Cài runtime LLM` (Ollama) (NEXT / NOT STARTED).
+## 7. Source-of-Truth Pointers
+
+- **Mandatory Working Rules:** [`../CLAUDE.md`](../CLAUDE.md)
+- **Development Router:** [`../README.md`](../README.md)
+- **Current Handoff & Session State:** [`SESSION_PROMPT.md`](SESSION_PROMPT.md)
+- **Technical Architecture & Decisions:** [`SYSTEM_ARCHITECTURE.md`](SYSTEM_ARCHITECTURE.md)
+- **Engineering History & Evidence:** [`LOG.md`](LOG.md)
+- **Runtime Model Metadata:** [`../config/model-manifest.yaml`](../config/model-manifest.yaml)
+- **Raw Hardware Survey:** [`../config/hardware-baseline.txt`](../config/hardware-baseline.txt)

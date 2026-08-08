@@ -1,794 +1,313 @@
-# SYSTEM ARCHITECTURE — Mowftee
+# SYSTEM ARCHITECTURE — Mowftee Living Technical Architecture
 
-## 1. Project identity
-
-| Thuộc tính | Giá trị |
-|---|---|
-| Product name | Mowftee |
-| Official pronunciation | Maou-ph-ti |
-| Repository | `mowftee` |
-| Python package | `mowftee` |
-| CLI command | `mowftee` |
-| systemd service | `mowftee.service` |
-| Environment prefix | `MOWFTEE_` |
-
-Mowftee là tên duy nhất được dùng cho sản phẩm và các định danh kỹ thuật.
+- **Purpose:** Canonical living technical architecture and accepted architectural decisions.
+- **Authority:** Canonical for current architecture, subsystem boundaries, technical policies and architectural decisions.
+- **Audience:** HQ / worker / developer.
+- **Update trigger:** Actual architecture, interface, subsystem boundary, technical policy, resource constraint, recovery design or architectural decision changes.
+- **Must not contain:** Historical command transcripts, benchmark logs, milestone chronology, temporary runtime state, or duplicated roadmap specifications.
 
 ---
 
-## 2. Trạng thái tài liệu
+## 1. Architecture Overview
 
-- **Architecture status:** Proposed and partially validated
-- **Hardware baseline:** Validated
-- **LLM runtime:** Installed & Validated (Ollama 0.32.6-1.1 + ollama-vulkan 0.32.6-1.1 via Vulkan backend on RTX 3050, systemd enabled/active, bind 127.0.0.1:11434)
-- **Default model:** `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`); Performance fallback: `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`)
-- **LLM Provider:** Implemented & Validated (`OllamaLLMProvider` in `src/mowftee/llm/ollama.py`)
-- **Conversation Manager:** Implemented & Validated (`ConversationManager` in `src/mowftee/conversation/manager.py`)
-- **Voice stack:** Not selected
-- **Current project phase:** Giai đoạn 1 (v0.1.0) COMPLETE; bước tiếp theo là Giai đoạn 2 (v0.2.x Persona)
+Mowftee is designed as a local-first, privacy-preserving AI companion for CachyOS (Arch Linux family), implemented as a **modular monolith** in Python.
 
----
+### Core Architecture Principles
+- **Local-First:** All AI inference, context management, memory, and tools run locally on the user's hardware. Local APIs bind strictly to loopback (`127.0.0.1`).
+- **Modular Monolith:** Single Python application codebase (`src/mowftee`) structured with clean interface boundaries (`Protocol` abstractions). Engines (LLM, STT, TTS, Memory, Tools, Avatar) interact through decoupled providers.
+- **Graceful Degradation:** Subsystem failures (e.g. TTS error, memory unavailable) degrade gracefully to simpler fallback modes (e.g. text display, in-memory session) without crashing the core application.
+- **Explicit Security & Privacy:** Shell execution is forbidden; tools operate on strict allowlists with schema validation, permission levels (L0–L5), and audit logs. Sensitive content and secrets are redacted from logs by default.
 
-### DEC-015 — Default LLM model selection and performance fallback
-
-- **Context:** Cần lựa chọn mô hình LLM mặc định cho Mowftee dựa trên kết quả thực nghiệm chuẩn hóa (TTFT, tốc độ sinh, khả năng tuân thủ câu lệnh, chất lượng tiếng Việt, suy luận toán/logic, độ ổn định 20 và 50 lượt hội thoại).
-- **Decision:**
-  1. **Default Selected LLM:** `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`, 4.0B parameters).
-  2. **Performance Fallback LLM:** `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`, 3.2B parameters).
-- **Reasoning & Empirical Evidence:**
-  - `qwen3:4b-instruct`: TTFT streaming ~0.188s (target < 4.0s), tốc độ sinh 50 lượt trung bình 31.95 tok/s, hoàn thành 50/50 lượt (100%), 0 lỗi instruction, 0 lỗi reasoning, 0 lỗi context/recall, 0 hallucination. Chất lượng tiếng Việt tự nhiên và mượt mà nhất.
-  - `llama3.2:3b`: TTFT streaming ~0.206s (target < 4.0s), tốc độ sinh 50 lượt trung bình 68.20 tok/s, hoàn thành 50/50 lượt (100%), nhưng gặp 2 lỗi vi phạm định dạng instruction, 1 lỗi suy luận toán học và 1 lỗi safety filter trigger nhầm.
-- **Observed Processor Behavior:**
-  - `llama3.2:3b` (runner 2.5 GB) duy trì 100% GPU thuần trên VRAM 4GB của RTX 3050.
-  - `qwen3:4b-instruct` (runner 3.2 GB) đạt 13%/87% CPU/GPU runner do phình nhẹ 13% CPU tràn từ 2.7 GB VRAM khả dụng.
-  - Hành vi processor thay đổi theo kích thước runner, trạng thái session và runner isolation; không khẳng định tất cả các model đều 100% GPU trong mọi tình huống.
-- **Scope & Limitations:**
-  - `llm.selection_status` semantics: `benchmark_required` khi benchmark/chọn default chưa hoàn tất; `selected` khi benchmark hoàn tất và default model đã được chọn. Policy này áp dụng cho LLM metadata; không tự thay đổi STT/TTS/embedding status.
-  - Chưa triển khai cơ chế tự động chuyển đổi fallback (fallback switching mechanism chưa implemented trong codebase).
-  - Cấu hình chỉ cập nhật thông số mô hình mặc định và `selection_status: selected` trong manifest.
-- **Revisit when:** Thay đổi hardware VRAM, xuất hiện thế hệ model 3B/4B nhỏ hơn hoặc tích hợp tự động switching logic ở G1-03.
-
-
----
-
-## 3. Hardware
-
-### 3.1 Máy
-
-- Vendor: ASUSTeK
-- Model: ASUS TUF Gaming F15 FX507ZC4
-- Firmware: FX507ZC4.312
-- Firmware date: 2024-12-03
-
-### 3.2 CPU
-
-- Model: Intel Core i5-12500H
-- Architecture: Alder Lake
-- Physical cores: 12
-- Threads: 16
-- P-core/E-core topology: 4 performance cores có SMT và 8 efficiency cores
-- Maximum frequency: 4.5 GHz
-- L3 cache: 18 MiB
-- AVX2: Có
-- Virtualization: VT-x
-
-### 3.3 GPU
-
-#### NVIDIA
-
-- Model: GeForce RTX 3050 Mobile
-- Architecture: Ampere GA107M
-- VRAM: 4096 MiB
-- Driver: 610.57.04
-- CUDA UMD: 13.3
-- Power limit shown: 90 W
-- Baseline VRAM usage: khoảng 15 MiB
-- Display attached: Không ở thời điểm baseline
-
-#### Intel
-
-- Model: Iris Xe, Alder Lake-P GT2
-- Vai trò hiện tại: desktop/Wayland compositor và màn hình laptop
-
-### 3.4 Memory
-
-- Installed/available class: 16 GB
-- `free` reported total: khoảng 15 GiB
-- Available tại baseline: khoảng 10 GiB
-- ZRAM: khoảng 15.24 GiB
-- Compression: zstd
-- Swappiness: 150
-
-### 3.5 Storage
-
-- Physical drive: Micron 2400 NVMe 512 GB class
-- Reported total: 476.94 GiB
-- Btrfs partition: 300 GiB
-- Btrfs used: khoảng 15.66 GiB
-- Btrfs estimated free: khoảng 283.16 GiB
-- EFI partition: 4 GiB
-
----
-
-## 4. Operating System
-
-- Distribution: CachyOS
-- Base: Arch Linux
-- Kernel: 7.1.6-1-cachyos
-- Init: systemd 261
-- Desktop: Hyprland 0.56.1
-- Display: Wayland + Xwayland
-- Shell: fish 4.8.1
-- Audio server: PipeWire 1.6.8
-- Session manager: WirePlumber 0.5.15
-- Python system: 3.14.6
-- Python project: CPython 3.11 (`>=3.11,<3.12`), managed by `uv`
-- Git: 2.55.0
-
-### Project Python environment
-
-- Interpreter và dependency của project do `uv` quản lý.
-- Virtual environment nằm tại `.venv/` trong repository và không được commit.
-- Python hệ thống 3.14.6 không được dùng để cài dependency project.
-- Dependency trực tiếp khai báo trong `pyproject.toml`; phiên bản resolve nằm trong `uv.lock` và phải được commit.
-- PyYAML là runtime dependency cho config YAML; phiên bản resolve hiện tại là 6.0.3 trong `uv.lock`.
-- Build backend là Hatchling; wheel lấy package từ `src/mowftee`.
-- Tái tạo môi trường bằng `uv sync --locked` hoặc `scripts/setup-python.sh`.
-
----
-
-## 5. Btrfs layout
-
-| Mount | Subvolume |
-|---|---|
-| `/` | `@` |
-| `/home` | `@home` |
-| `/root` | `@root` |
-| `/srv` | `@srv` |
-| `/var/cache` | `@cache` |
-| `/var/tmp` | `@tmp` |
-| `/var/log` | `@log` |
-
-Mount options chính:
+### System Diagram
 
 ```text
-rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2
-```
-
-### Kiến trúc lưu trữ đã chốt
-
-```text
-/srv/mowftee/models/ollama/         model tải lại được
-${XDG_CONFIG_HOME:-$HOME/.config}/mowftee/       config riêng
-${XDG_DATA_HOME:-$HOME/.local/share}/mowftee/    memory, conversation, custom voice/LoRA
-${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/   log/audit/benchmark
-${XDG_CACHE_HOME:-$HOME/.cache}/mowftee/         cache tạm
-```
-
-### Lưu ý
-
-- `@srv` là subvolume riêng, phù hợp để tách model khỏi root snapshot.
-- Không có Snapper, Timeshift, Btrfs Assistant hoặc timer snapshot; `@srv` hiện không bị snapshot tự động.
-- Không tạo child subvolume model khi chưa có snapshot policy cho `@srv`; xem xét lại nếu policy thay đổi.
-- Snapshot trên cùng NVMe không phải backup.
-- Chưa cần tắt CoW cho SQLite.
-- `/srv/mowftee` và `/srv/mowftee/models` là `root:root 0755`.
-- `/srv/mowftee/models/ollama` đã được tạo khi cài Ollama; owner `ollama:ollama`, mode `0750`.
-- XDG directories của Mowftee thuộc user hiện tại và dùng mode `0700`.
-
----
-
-## 6. Audio
-
-- PipeWire: active.
-- WirePlumber: active.
-- Default sink: Built-in Audio Analog Stereo.
-- Default source: Built-in Audio Analog Stereo.
-- Default source state tại baseline: muted.
-- Webcam USB có V4L2 source, không được xem là microphone mặc định.
-
-Voice stage phải:
-
-1. Xác nhận source chính xác.
-2. Unmute source.
-3. Ghi sample kiểm tra.
-4. Đo noise floor.
-5. Chống thu ngược âm thanh từ loa.
-
----
-
-## 7. Logical architecture
-
-```text
-┌─────────────────────────────────────────────┐
-│                User Interfaces              │
-│ Terminal / GUI / Microphone / Avatar        │
-└──────────────────────┬──────────────────────┘
-                       │
-┌──────────────────────▼──────────────────────┐
-│                 Application Core            │
-│ State Machine                               │
-│ Conversation Manager                        │
-│ Context Manager                             │
-│ Persona Manager                             │
-│ Safety Layer                                │
-└─────────┬────────────┬───────────┬───────────┘
-          │            │           │
-   ┌──────▼─────┐ ┌────▼────┐ ┌────▼─────────┐
-   │LLM Provider│ │ Memory  │ │ Tool Manager │
-   └──────┬─────┘ └────┬────┘ └────┬─────────┘
-          │            │           │
-   ┌──────▼────────────▼───────────▼───────────┐
-   │         Voice and Presentation Layer      │
-   │ VAD / STT / TTS / Audio Queue / Avatar    │
-   └────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                      User Interfaces                        │
+│ Terminal CLI (Implemented) / GUI / Microphone / Avatar (Planned)
+└──────────────────────────────┬──────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────┐
+│                      Application Core                       │
+│ State Machine (Planned)                                     │
+│ Conversation Manager (Implemented)                          │
+│ Layered Context Assembly (Implemented)                      │
+│ Persona Engine (Planned - Phase 2)                          │
+│ Safety & Allowlist Layer (Planned - Phase 6)                │
+└────────┬─────────────────┬──────────────────┬───────────────┘
+         │                 │                  │
+ ┌───────▼──────┐  ┌───────▼──────┐   ┌───────▼──────┐
+ │ LLM Provider │  │    Memory    │   │ Tool Manager │
+ │ (Ollama HTTP │  │  (SQLite DB  │   │  (Allowlist  │
+ │ Implemented) │  │  Planned)    │   │  Planned)    │
+ └───────┬──────┘  └───────┬──────┘   └───────┬──────┘
+         │                 │                  │
+ ┌───────▼─────────────────▼──────────────────▼───────────────┐
+ │             Voice & Presentation Subsystems                │
+ │ VAD / STT / TTS / Audio Queue / Avatar (Planned)           │
+ └────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 8. Provider interfaces
+## 2. Platform & Resource Constraints
 
-### 8.1 LLM Provider
+Technical architecture decisions are constrained by the baseline hardware profile:
 
+- **GPU Memory Budget:** NVIDIA RTX 3050 Laptop GPU (4 GB VRAM) is currently prioritized and primarily reserved for the local LLM runtime (`OllamaLLMProvider`) under the current hardware budget. Model sizing is constrained to 3B–4B quantized parameters (`Q4_K_M`).
+- **System RAM Budget:** 16 GB system RAM (supplemented by ZRAM swap). Offloading large model layers to CPU is minimized to maintain conversational throughput.
+- **CPU Workload Allocation:** 12-core / 16-thread CPU handles application orchestration, context assembly, JSONL logging, and future lightweight STT/TTS/VAD pipelines.
+- **Desktop & Compositor:** Intel Iris Xe iGPU handles Hyprland / Wayland desktop rendering, isolating display workloads from VRAM.
+- **Target Platform Assumptions:** CachyOS (Arch Linux family), systemd service management, Btrfs filesystem (`/srv` on subvolume `@srv`), PipeWire audio server.
+
+Refer to [`../config/hardware-baseline.txt`](../config/hardware-baseline.txt) for raw system survey data and [`../config/model-manifest.yaml`](../config/model-manifest.yaml) for model runtime metadata.
+
+---
+
+## 3. Current Implemented Architecture (IMPLEMENTED)
+
+Phase 1 established the text chat core, LLM provider, conversation manager, and terminal CLI.
+
+### 3.1 LLM Provider Boundary (`mowftee.llm`)
+- **Protocol:** `LLMProvider` (`src/mowftee/llm/base.py`) defines standard methods: `chat()`, `stream_chat()`, `cancel()`, `health_check()`, `get_metrics()`.
+- **Implementation:** `OllamaLLMProvider` (`src/mowftee/llm/ollama.py`) communicates via stdlib `urllib.request` HTTP REST API with Ollama running at `127.0.0.1:11434`. Zero external HTTP library dependencies.
+- **Streaming & Cancellation:** NDJSON streaming parser computes real Time To First Token (TTFT). Thread-safe cancellation closes active HTTP sockets out-of-lock via `_active_requests` registry.
+- **Metrics Tracking:** Snapshot metrics (`LLMMetrics`) track total requests, token counts, throughput (tokens/sec), and latency.
+
+### 3.2 Conversation Manager (`mowftee.conversation`)
+- **Atomic Turn Commit:** User and assistant message pairs (`user`, `assistant`) are committed to in-memory history (`_committed_history`) ONLY upon successful turn completion. Stream cancellations or HTTP failures leave committed history 100% unmutated.
+- **Layered Context Assembly:** Context sent to LLM Provider is assembled dynamically:
+  1. Base system policy (`_system_prompt`)
+  2. Dynamic ISO local datetime context (when `inject_datetime: true`)
+  3. Recent `max_turns` committed message pairs (sliding window)
+  4. Pending user input
+- **Turn Locking:** Single active turn per manager instance via `_active_lock`. Concurrent requests throw `ConversationBusyError`.
+- **Minimal Terminal Runner:** `src/mowftee/cli.py` & `scripts/chat.sh` provide direct terminal chat interaction.
+
+### 3.3 Configuration & Logging Integration
+- Config loaded via `mowftee.config` (`PyYAML` loader, layered precedence).
+- Structured JSONL logging via `mowftee.logging_setup` (`app.jsonl`, `performance.jsonl`, `audit.jsonl`).
+
+Refer to [`LOG.md`](LOG.md) for empirical test logs and benchmark evidence.
+
+---
+
+## 4. Subsystem Boundaries & Future Design
+
+Subsystems not yet implemented are defined by clear architectural boundaries to prevent monolithic coupling.
+
+### 4.1 Persona Subsystem (PLANNED — Phase 2)
+- **Responsibility:** Defines Mowftee's identity, default Vietnamese forms of address, tone, playfulness, and response constraints.
+- **Boundary:** Persona defines *who Mowftee is*. It injects system policies into `ConversationManager` and enforces consistent persona evaluation criteria. Persona is distinct from Memory (facts) and Adaptation (interaction patterns).
+
+### 4.2 Adaptation Subsystem (PLANNED)
+- **Responsibility:** Gradually adapts interaction style based on observed user preferences using evidence and confidence scores.
+- **Boundary:** Operates on evidence/confidence thresholds; does NOT perform continuous LLM fine-tuning or alter core identity.
+
+### 4.3 Memory Subsystem (PLANNED — Phase 3)
+- **Responsibility:** Manages persistent cross-session facts, user preferences, and conversation summaries in SQLite.
+- **Boundary:** Memory defines *what Mowftee knows*. It provides `store_memory()`, `retrieve_memory()`, `update_memory()`, and `delete_memory()`. Memory stores selective facts, NOT raw full-transcript dumps.
+
+### 4.4 Voice Subsystem (PLANNED — Phase 4 & 5)
+- **Responsibility:** VAD, STT (speech-to-text), TTS (text-to-speech), audio queueing, and barge-in (interruption) handling.
+- **Boundary:** Decoupled via `STTProvider` and `TTSProvider`. Supports sentence-chunked streaming TTS and non-blocking stream cancellation (< 300 ms target latency).
+
+### 4.5 Tool Subsystem (PLANNED — Phase 6)
+- **Responsibility:** Executes safe Linux system tools via strict allowlist and permission levels (L0 Chat to L5 Forbidden).
+- **Boundary:** `ToolManager` validates parameters, enforces timeouts, logs to `audit.jsonl`, and requires explicit user confirmation for L4 system changes. Arbitrary shell execution (`run_shell`) is strictly forbidden (L5).
+
+### 4.6 Avatar Subsystem (PLANNED — Phase 7)
+- **Responsibility:** Renders visual state (listening, thinking, speaking) and audio-driven lip-sync.
+- **Boundary:** Receives abstract state events from Application Core; failures in the Avatar layer do NOT crash conversational AI logic.
+
+---
+
+## 5. Data & Storage Architecture
+
+### File System & XDG Layout
 ```text
-chat()
-stream_chat()
-cancel()
-health_check()
-get_metrics()
+/srv/mowftee/models/ollama/                              Public/reproducible Ollama models (ollama:ollama 0750)
+${XDG_CONFIG_HOME:-$HOME/.config}/mowftee/config.yaml    User configuration overrides (mode 0700)
+${XDG_DATA_HOME:-$HOME/.local/share}/mowftee/            Memory DB, persona files, custom voices (mode 0700)
+${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/           JSONL logs, audit trails, benchmarks (mode 0700)
+${XDG_CACHE_HOME:-$HOME/.cache}/mowftee/                 Temporary runtime cache (mode 0700)
 ```
 
-### 8.2 Memory Provider
-
-```text
-store_memory()
-retrieve_memory()
-list_memories()
-update_memory()
-delete_memory()
-export_memory()
-import_memory()
-```
-
-### 8.3 STT Provider
-
-```text
-transcribe()
-stream_transcribe()
-health_check()
-get_metrics()
-```
-
-### 8.4 TTS Provider
-
-```text
-synthesize()
-stream_synthesize()
-stop()
-health_check()
-get_metrics()
-```
-
-### 8.5 Tool Provider
-
-```text
-validate()
-requires_confirmation()
-execute()
-cancel()
-audit()
-```
-
-### 8.6 Avatar Provider
-
-```text
-set_state()
-set_expression()
-set_speaking_level()
-health_check()
-```
+### Btrfs Subvolume Policy
+- Model storage path `/srv/mowftee/models/ollama/` resides under `/srv` on the dedicated `@srv` Btrfs subvolume (`/dev/nvme0n1p1[/@srv]`), keeping multi-gigabyte model blobs out of root OS snapshots (`@`).
+- Reproducible public models and temporary cache files are excluded from backup payloads.
 
 ---
 
-## 9. State machine
+## 6. Configuration Architecture
 
-### Primary states
+Configuration uses a 4-tier layered precedence model (lowest to highest):
 
-- `STARTING`
-- `IDLE`
-- `LISTENING`
-- `TRANSCRIBING`
-- `THINKING`
-- `SPEAKING`
-- `SHUTTING_DOWN`
+1. `config/default.yaml` (Packaged default resource, schema version 1)
+2. `${XDG_CONFIG_HOME:-$HOME/.config}/mowftee/config.yaml` (Optional user YAML overrides)
+3. `MOWFTEE_` Environment Variables (Double-underscore nested keys, e.g. `MOWFTEE_LLM__DEFAULT_MODEL`)
+4. CLI Explicit Arguments
 
-### Secondary/error states
-
-- `INTERRUPTED`
-- `TOOL_RUNNING`
-- `WAITING_CONFIRMATION`
-- `ERROR`
-
-### Critical invariants
-
-1. Không có hai TTS stream phát đồng thời.
-2. Khi barge-in được kích hoạt, TTS dừng và LLM request cũ bị hủy.
-3. Tool thay đổi hệ thống không chạy khi chưa xác nhận.
-4. Avatar lỗi không làm đổi state của AI Core sang crash.
-5. Memory lỗi chuyển sang in-memory session.
-6. STT lỗi chuyển sang keyboard input.
-7. TTS lỗi vẫn hiện text output.
+Config loader validates schema, performs non-destructive dict merges, parses scalar environment overrides safely, and raises `ConfigValidationError` on invalid inputs without leaking secrets in stack traces.
 
 ---
 
-## 10. Resource allocation
+## 7. Logging & Observability Architecture
 
-### Giai đoạn text
+Logging uses three dedicated JSONL streams under `${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/`:
 
-- RTX 3050: LLM.
-- CPU: application core, logging, context.
-- RAM: model spill/context/cache.
-- iGPU: desktop.
+- **`app.jsonl`:** Lifecycle events, state transitions, application errors, recovery diagnostics.
+- **`performance.jsonl`:** Model metrics, token counts, TTFT, throughput (tok/s), latency, hardware load.
+- **`audit.jsonl`:** Tool execution logs, parameter validation, permission levels, user confirmations.
 
-### Giai đoạn voice
-
-- RTX 3050: ưu tiên LLM.
-- CPU: VAD, STT ban đầu, TTS nhẹ.
-- iGPU: desktop và avatar nếu hỗ trợ.
-- Không chạy đồng thời model LLM lớn, STT GPU nặng và avatar nặng trong cấu hình mặc định.
-
-### Safe resource policy
-
-- Nếu RAM available < 3 GB: giảm context, dừng preload voice hoặc unload module không cần.
-- Nếu GPU OOM: giảm model/context hoặc chuyển một phần sang CPU.
-- Không dựa vào ZRAM để chạy model vượt cấu hình.
-- Log RAM/VRAM theo request benchmark.
+### Privacy & Security Constraints
+- All log files use strict permissions (`0600` file, `0700` parent directory).
+- UTC ISO 8601 timestamps and UUID request context tracking via `contextvars`.
+- Key redaction automatically masks credentials, `Authorization`, `Cookie`, and secret keys.
+- User conversation text, prompts, and raw audio are masked by default in production logs.
+- File logging failures fall back gracefully to console output without crashing the application.
 
 ---
 
-## 11. Data architecture
+## 8. Security & Privacy Boundaries
 
-### Git-tracked
-
-- Source code.
-- Persona.
-- Prompt examples.
-- Config mặc định.
-- Model manifest không chứa secret.
-- Test prompts.
-- Documentation.
-- Migration.
-
-### Not tracked
-
-- User `config.yaml` dưới XDG config path.
-- `.env`
-- Memory database.
-- Conversation archive.
-- Audio cá nhân.
-- Downloaded models.
-- Generated voice files.
-- Runtime logs.
-- API key/token.
-
-### Database
-
-- Engine dự kiến: SQLite.
-- Journaling mode: quyết định khi triển khai.
-- Schema version riêng.
-- Migration bắt buộc.
-- Backup bằng SQLite-consistent method.
-- Không dùng `cp` mù khi database đang ghi.
+1. **Loopback Binding:** Ollama LLM API binds strictly to `127.0.0.1:11434`. No external network interfaces exposed.
+2. **Tool Safety & Allowlist:** No unvetted shell commands or arbitrary script execution. Tools require explicit parameter schemas and permission gating (L0–L5).
+3. **Privilege Gating:** Application runs under normal user privileges; `sudo` execution is forbidden.
+4. **Data Isolation:** User memories, private configs, custom voices, and conversation histories are stored strictly under `$HOME` and excluded from public Git repositories.
 
 ---
 
-## 12. Security boundaries
+## 9. Recovery Architecture
 
-### Permission levels
+Mowftee disaster recovery follows a clear separation between code, public assets, and private data:
 
-| Level | Ý nghĩa |
-|---|---|
-| L0 | Hội thoại |
-| L1 | Đọc trạng thái |
-| L2 | Mở app/file |
-| L3 | Ghi trong workspace |
-| L4 | Thay đổi hệ thống, bắt buộc xác nhận |
-| L5 | Cấm |
+- **Source Code & History:** Recovered via Git repository checkout and annotated version tags (`vX.Y.Z`).
+- **Runtime Environment:** Re-created using `uv sync --locked` from `pyproject.toml` / `uv.lock`.
+- **Public Models:** Re-downloaded via Ollama manifest specs; excluded from backup archives.
+- **Private Data Recovery:** Restored from GPG AES-256 encrypted archives containing non-reproducible private state when present (SQLite memory databases, private user configs, custom persona files).
+- **Tooling Contract:** Official backup (`scripts/backup.sh`) and restore (`scripts/restore.sh`) scripts accept `--target` and `--archive` arguments. Encrypted archives (`.tar.gz.gpg`) and SHA-256 sidecars (`.tar.gz.gpg.sha256`) remain paired with generated names unchanged.
+- **Operator Directory Convention:** Off-machine backup archives are organized by the operator under `$HOME/Mowftee Backups/Phase N - vX.Y.Z/`.
 
-### Bị cấm mặc định
-
-- `run_shell(user_input)`
-- Tự gọi `sudo`
-- Tự xóa file
-- Tự sửa bootloader
-- Tự sửa firewall
-- Tự đọc secret
-- Tự gửi file ra Internet
-- Tự thực hiện lại tool nguy hiểm sau lỗi
-
-### Network
-
-- LLM API chỉ bind loopback trong các giai đoạn đầu.
-- Không mở ra LAN/Internet trước authentication review.
-- Tool network phải khai báo rõ destination và dữ liệu gửi.
+Refer to [`LOG.md`](LOG.md) for historical backup validation logs.
 
 ---
 
-## 13. Configuration and logging architecture
+## 10. Architectural References & Design Direction (REFERENCE / DIRECTION)
 
-### 13.1 Configuration
+The Sanbaka / Project AIRI design notes serve as conceptual architectural reference material (design direction), NOT an implementation commitment or roadmap change:
 
-Nguồn cấu hình được merge theo precedence từ thấp đến cao:
-
-```text
-config/default.yaml
-→ ${XDG_CONFIG_HOME:-$HOME/.config}/mowftee/config.yaml
-→ MOWFTEE_ environment overrides
-→ CLI overrides dạng mapping
-```
-
-- `config/default.yaml` bắt buộc tồn tại và dùng `config_schema_version: 1`.
-- Build wheel force-include default YAML thành `mowftee/default.yaml`; loader ưu tiên file source và fallback sang package resource sau khi cài wheel.
-- `config/example.yaml` chỉ là tài liệu mẫu, không bao giờ được tự động load làm user config.
-- User config là tùy chọn; nếu tồn tại nhưng YAML hoặc giá trị sai thì phải báo `ConfigError`/`ConfigValidationError`, không silently fallback.
-- Nested environment key dùng hai dấu gạch dưới, ví dụ `MOWFTEE_LOGGING__LEVEL`; scalar được parse mà không dùng `eval`.
-- Merge và sanitize không mutate mapping đầu vào. Exception chỉ nêu path/field liên quan, không dump secret hoặc toàn bộ config.
-
-### 13.2 Logging
-
-Đường dẫn runtime:
-
-```text
-${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/logs/app.jsonl
-${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/logs/performance.jsonl
-${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/audit/audit.jsonl
-```
-
-Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timestamp`, `level`, `event`, `module`, `request_id`, `session_id`, `message`, `error_type`, `duration_ms`, `metadata`.
-
-- Timestamp là UTC ISO 8601; request ID là UUID được truyền qua `contextvars`.
-- Console và file output cấu hình độc lập; file dùng `RotatingFileHandler` chuẩn, mode `0600`, thư mục Mowftee mode `0700`.
-- Gọi setup nhiều lần thay thế handler do Mowftee quản lý, không nhân đôi record và không thay đổi root logger.
-- Key secret được lọc không phân biệt hoa thường, kể cả nested mapping, collection, URL query và exception metadata.
-- Giá trị header `Authorization`, `Cookie`, `Set-Cookie` bị che toàn bộ; chained YAML parser error không được giữ nếu có thể chứa nội dung config.
-- Prompt, conversation, file content và audio metadata bị chặn mặc định theo privacy flags.
-- Raw audio luôn bị chặn kể cả khi cho phép log audio metadata.
-- Nếu tạo file hoặc emit/rotation lỗi, kênh tương ứng fallback sang console và phát diagnostic ngắn, không làm ứng dụng crash.
-
-#### `app.jsonl`
-
-- Lifecycle.
-- State transition.
-- Error.
-- Recovery.
-- Timeout.
-
-#### `performance.jsonl`
-
-- Model identifier.
-- Input/output tokens.
-- Time to first token.
-- Throughput.
-- Total duration.
-- RAM/VRAM/CPU/GPU.
-
-#### `audit.jsonl`
-
-- Tool ID.
-- Sanitized parameters.
-- Permission level.
-- Confirmation result.
-- Execution result.
-- Duration.
-- Error code.
+1. **Cooperating Subsystems:** Decouple Brain / Conversation, Persona-State, Memory, Voice, Tools, and Body (Avatar) into interacting providers.
+2. **Dynamic Persona:** Persona should evolve beyond a single static prompt into core identity, current state, user preferences, familiarity/relationship context, and current conversation context.
+3. **Evidence-Based Adaptation:** User adaptation requires evidence and confidence scoring rather than instant permanent shifts.
+4. **Subsystem Separation:** Maintain strict conceptual separation between Memory (what Mowftee knows), Persona (who Mowftee is), and Adaptation (how Mowftee interacts).
+5. **Future Memory Categories & Consolidation:** Memory taxonomy distinguishes working/session memory, stable user facts, preferences, episodic memories, and task/project memory. Consolidation and forgetting mechanisms are added only when justified by empirical testing.
+6. **Voice Streaming & Barge-In:** Voice pipeline supports sentence-chunked streaming TTS and interruption/barge-in detection rather than a purely linear sequence.
+7. **Abstract Avatar Signals:** Avatar layer consumes abstract state and expression signals (listening/thinking/speaking), avoiding direct coupling to LLM text parsing or `ConversationManager`.
+8. **Learn Concepts, Not Stack:** Learn conceptual architecture from AIRI/Sanbaka without adopting their full tech stack; preserve CachyOS native, local-first, Python modular monolith architecture.
+9. **Continuity Over Time:** Mowftee develops conversational continuity across interactions over time rather than simulating a complete static personality on day one.
 
 ---
 
-## 14. Model architecture — Proposed
+## 11. Decision Log
 
-### LLM
+### DEC-001 — Product Identity and Technical Naming
+- **Status:** Accepted
+- **Decision:** Product official name is Mowftee (pronounced Maou-ph-ti). Technical identifiers are `mowftee` (repo/package/CLI), `mowftee.service` (systemd), and `MOWFTEE_` (env prefix).
+- **Reason:** Consistency across codebase, documentation, services, and paths.
 
-- Runtime candidate: Ollama.
-- Fallback runtime: llama.cpp server.
-- Model class: 3B–4B quantized.
-- Context initial target: 4096.
-- Default model: chưa chọn.
-- Selection method: fixed benchmark.
+### DEC-002 — Modular Monolith Architecture
+- **Status:** Accepted
+- **Decision:** Build Mowftee as a modular monolith in Python with clear provider abstractions (`Protocol`).
+- **Reason:** Low complexity, single-developer efficiency, zero IPC overhead, while allowing modular engine replacement.
 
-### STT
+### DEC-003 — Pretrained Quantized Models over Training from Scratch
+- **Status:** Accepted
+- **Decision:** Use pretrained quantized LLM models (3B–4B parameter range) rather than training models from scratch.
+- **Reason:** Hardware constraints (RTX 3050 4 GB VRAM / 16 GB RAM).
 
-- Candidate class: whisper.cpp compatible model.
-- Execution target: CPU first.
-- Default model: chưa chọn.
-- Language focus: Vietnamese with technical English terms.
+### DEC-004 — Ollama as Initial Local LLM Runtime
+- **Status:** Accepted
+- **Decision:** Adopt Ollama as the primary candidate LLM runtime; `llama.cpp` server as fallback candidate.
+- **Reason:** Simplified local model management and HTTP REST API.
 
-### VAD
+### DEC-005 — Storing Model Weights Outside Git Repository
+- **Status:** Accepted
+- **Decision:** Store downloaded model weights under `/srv/mowftee/models/ollama/`. Exclude weights from Git and backups.
+- **Reason:** Large reproducible binaries belong in dedicated model storage.
 
-- Candidate: integrated VAD or Silero-class VAD.
-- Default: chưa chọn.
+### DEC-006 — Btrfs Copy-on-Write Policy for SQLite
+- **Status:** Accepted
+- **Decision:** Retain default Btrfs CoW configuration for SQLite memory files until benchmark evidence justifies changes.
+- **Reason:** Prevent premature optimization and preserve snapshot/reflink capabilities.
 
-### TTS
+### DEC-007 — Allowlisted Tools without Arbitrary Shell Execution
+- **Status:** Accepted
+- **Decision:** All system tools must be allowlisted with explicit schemas, parameter validation, and audit logging. Arbitrary `run_shell` is forbidden.
+- **Reason:** System security and auditability.
 
-- Default: chưa chọn.
-- Must pass Vietnamese pronunciation benchmark.
-- Must support low start latency or chunked synthesis.
+### DEC-008 — Isolated CPython 3.11 Environment Managed by `uv`
+- **Status:** Accepted
+- **Decision:** Use dedicated CPython 3.11 (`>=3.11,<3.12`) managed by `uv` in `.venv/` with committed `uv.lock`. System Python 3.14 is forbidden for project packages. Build backend is Hatchling.
+- **Reason:** Isolate project dependencies from CachyOS rolling release system Python updates.
 
-### Memory
+### DEC-009 — Portable XDG Storage Layout and `@srv` Model Subvolume
+- **Status:** Accepted
+- **Decision:** Store user config under `XDG_CONFIG_HOME`, data under `XDG_DATA_HOME`, state under `XDG_STATE_HOME`, and cache under `XDG_CACHE_HOME`. Public models reside at `/srv/mowftee/models/ollama` on `@srv` subvolume (`ollama:ollama 0750`).
+- **Reason:** Clean separation of user data, logs, and reproducible model weights across Btrfs subvolumes.
 
-- SQLite.
-- Long-term memory is explicit/selective.
-- Conversation summaries are separate from user facts.
+### DEC-010 — Layered YAML Configuration & Privacy-Aware JSONL Logging
+- **Status:** Accepted
+- **Decision:** PyYAML loader with 4-tier precedence (`default.yaml` -> user `config.yaml` -> `MOWFTEE_` env -> CLI args). Three JSONL logging streams (`app.jsonl`, `performance.jsonl`, `audit.jsonl`) with automatic secret redaction, UUID request context, and console fallback.
+- **Reason:** Reproducible configuration and auditability without leaking secrets or crashing on file handler errors.
 
-### Avatar
+### DEC-011 — Local Encrypted Staging before Off-Machine Backup
+- **Status:** Accepted
+- **Decision:** Backup tool creates tar gzip archives encrypted with GPG AES-256, sidecar SHA-256 checksums, and SQLite `Connection.backup()` snapshots. Restores decrypt to temporary directories for manifest and checksum verification prior to publishing.
+- **Reason:** Data integrity and security prior to off-machine transmission.
 
-- First: PNGTuber state integration.
-- Later: Live2D or VRM after resource benchmark.
+### DEC-012 — Off-Machine Backup Target & Cloud Round-Trip Validation
+- **Status:** Accepted
+- **Decision:** Private Google Drive chosen as off-machine backup target. Verification requires production backup -> local restore sanity check -> upload -> delete local original -> download -> restore -> data diff validation.
+- **Reason:** Ensure disaster recovery capability from cloud storage.
 
----
+### DEC-013 — Canonical Package Versioning Policy
+- **Status:** Accepted
+- **Decision:** `pyproject.toml` is the single canonical source of truth for version metadata. `src/mowftee/__init__.py` and `config/model-manifest.yaml` must remain in sync. Milestone releases use annotated Git tags (`vX.Y.Z`).
+- **Reason:** Explicit, simple version tracking without dynamic build machinery.
 
-## 15. Decision Log
+### DEC-014 — Native CachyOS Ollama + Vulkan Runtime Setup
+- **Status:** Accepted
+- **Decision:** Install native CachyOS `ollama` and `ollama-vulkan` packages on Vulkan backend (RTX 3050 Laptop GPU). Service bound loopback-only to `127.0.0.1:11434` with model storage at `/srv/mowftee/models/ollama`.
+- **Reason:** Native package lifecycle management and Vulkan GPU acceleration.
 
-### DEC-001 — Tên và định danh Mowftee
+### DEC-015 — Default LLM Selection and Fallback Policy
+- **Status:** Accepted
+- **Decision:** Selected default model: `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`). Performance fallback model: `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`). Automatic switching mechanism is not implemented in Phase 1.
+- **Reason:** Empirical benchmark results (TTFT, throughput, instruction compliance, reasoning accuracy, and Vietnamese fluency).
 
-- **Context:** Dự án cần một danh tính riêng trước khi tạo repository.
-- **Decision:** Dùng Mowftee, đọc là Maou-ph-ti.
-- **Technical identifiers:** `mowftee`, `mowftee.service`, `MOWFTEE_`.
-- **Reason:** Đồng bộ giữa sản phẩm, package, CLI, service và đường dẫn.
-- **Revisit when:** Chỉ thay đổi qua migration và quyết định kiến trúc mới.
-
-### DEC-002 — Modular monolith
-
-- **Context:** Máy cá nhân, dự án một người, cần debug dễ.
-- **Decision:** Dùng modular monolith.
-- **Reason:** Ít overhead, dễ chạy và vẫn thay engine qua provider.
-- **Revisit when:** Một module cần lifecycle hoặc tài nguyên độc lập.
-
-### DEC-003 — Không train LLM từ đầu
-
-- **Context:** RTX 3050 4 GB, RAM 16 GB.
-- **Decision:** Dùng model pretrained quantized.
-- **Reason:** Phù hợp tài nguyên và mục tiêu.
-- **Revisit when:** Có phần cứng/cloud và nhu cầu nghiên cứu riêng.
-
-### DEC-004 — Ollama là runtime đầu tiên
-
-- **Context:** Cần quản lý model và API local đơn giản.
-- **Decision:** Benchmark Ollama trước.
-- **Fallback:** llama.cpp server.
-- **Revisit when:** VRAM control, latency hoặc compatibility không đạt.
-
-### DEC-005 — Model nằm ngoài repository
-
-- **Context:** Model lớn, tải lại được.
-- **Decision:** Không push model lên Git.
-- **Preferred path:** `/srv/mowftee/models/ollama/`.
-- **Revisit when:** Snapshot policy của `@srv` không phù hợp.
-
-### DEC-006 — Không tắt CoW cho SQLite ở đầu dự án
-
-- **Context:** Chưa có số liệu chứng minh vấn đề.
-- **Decision:** Giữ cấu hình Btrfs mặc định.
-- **Reason:** Tránh tối ưu sớm và giảm khả năng snapshot/reflink.
-- **Revisit when:** Benchmark cho thấy fragmentation/write amplification đáng kể.
-
-### DEC-007 — Tool không có shell tự do
-
-- **Context:** AI có thể sinh lệnh sai.
-- **Decision:** Tool theo schema và allowlist.
-- **Reason:** An toàn và audit được.
-- **Revisit when:** Không xem xét shell tự do; chỉ mở rộng tool cụ thể.
-
-### DEC-008 — Python project tách khỏi Python hệ thống
-
-- **Context:** Python hệ thống là 3.14.6 trên rolling release.
-- **Decision:** Dùng CPython 3.11 (`>=3.11,<3.12`) do `uv` quản lý trong `.venv/`; khóa dependency bằng `uv.lock` và sync bằng `uv sync --locked`.
-- **Build backend:** Hatchling với layout `src/mowftee`.
-- **Reason:** Tách project khỏi Python 3.14.6 của CachyOS rolling release và giữ compatibility rộng cho các module LLM, STT và TTS dự kiến.
-- **Validated with:** CPython 3.11.15, `uv lock --check`, locked sync, import smoke test, pytest và Ruff.
-- **Revisit when:** Dependency AI đã chọn yêu cầu Python khác hoặc CPython 3.11 hết thời gian hỗ trợ phù hợp với dự án.
-
-### DEC-009 — Storage layout theo XDG và `@srv`
-
-- **Context:** Source, dữ liệu cá nhân và public model có yêu cầu quyền, snapshot và backup khác nhau.
-- **Decision:** Dùng XDG paths portable cho config/data/state/cache; public Ollama model nằm tại `/srv/mowftee/models/ollama` trên `@srv`.
-- **Snapshot:** `@srv` hiện không bị snapshot tự động; không tạo child subvolume model. Public model và cache không cần snapshot hoặc backup.
-- **Backup:** Memory, private config, custom voice và LoRA bắt buộc backup ngoài máy. G0-06A đã triển khai local encrypted staging; G0-06B đã xác minh off-machine backup bằng full cloud round-trip qua Google Drive riêng tư. Conversation history là dữ liệu nhạy cảm và chỉ backup khi người dùng bật tùy chọn.
-- **Permissions:** XDG directories là `0700` của user; model directory cuối cùng là `ollama:ollama 0750`.
-- **Completed action:** Thư mục `/srv/mowftee/models/ollama` đã được tạo với `ollama:ollama 0750` khi cài Ollama runtime ở G1-01.
-- **Rollback:** Dừng ứng dụng/service, chuyển dữ liệu bằng công cụ bảo toàn metadata, cập nhật config rồi xác minh trước khi xóa đường dẫn cũ. Không xóa public model nếu chưa có xác nhận.
-- **Revisit when:** Bật snapshot cho `@srv`, thay đổi service account hoặc chuyển model sang filesystem khác.
-
-### DEC-010 — Layered YAML config và privacy-aware JSONL logging
-
-- **Context:** Modular monolith cần một nguồn cấu hình có thể tái tạo nhưng vẫn tách config riêng/secret khỏi Git, cùng logging đủ quan sát mà không mặc định ghi dữ liệu cá nhân.
-- **Decision:** Dùng PyYAML cho schema version 1 với precedence default → user config XDG → `MOWFTEE_` environment → CLI mapping; dùng ba kênh JSONL app/performance/audit dưới XDG state path.
-- **Validation:** Default config là bắt buộc; user config lỗi không bị bỏ qua; nested merge không mutate input; field sai được báo bằng exception riêng.
-- **Privacy:** Redact secret theo key, URL query và toàn bộ authorization/cookie header; prompt, conversation, file content và audio metadata mặc định không được ghi; raw audio luôn bị chặn.
-- **Reliability:** UUID request context dùng `contextvars`; rotation dùng thư viện chuẩn; file mode `0600`; setup idempotent và không thay đổi root logger.
-- **Fallback:** Lỗi tạo, ghi hoặc rotate file hạ cấp riêng kênh sang console với diagnostic ngắn thay vì làm crash ứng dụng.
-- **Validated with:** 39 pytest tests, Ruff, lock/sync check, config/logging smoke test trong XDG tạm và wheel-install smoke test.
-- **Revisit when:** Schema cần migration, logging chuyển sang collector bên ngoài hoặc privacy policy có yêu cầu phân loại dữ liệu mới.
-
----
-
-### DEC-011 — Local encrypted backup/restore trước backup ngoài máy
-
-- **Context:** Dữ liệu riêng cần có định dạng archive, kiểm tra toàn vẹn và quy trình restore an toàn trước khi tích hợp target cloud hoặc thiết bị ngoài.
-- **Decision:** G0-06A tạo archive tar gzip mã hóa đối xứng bằng GPG AES-256, sidecar SHA-256 cho ciphertext, manifest và checksum SHA-256 nội bộ cho payload.
-- **SQLite:** Database đang mở được snapshot bằng `sqlite3.Connection.backup()`; không sao chép mù file SQLite đang ghi.
-- **Restore safety:** Xác minh sidecar, giải mã vào vùng tạm, từ chối path traversal, symlink và special file, kiểm tra manifest/checksum rồi mới publish destination.
-- **Privacy:** Manifest không chứa hostname, username hoặc absolute source path.
-- **Status:** Archive G0-06A được đánh dấu `local_staging`; archive nằm trên cùng máy chưa phải backup ngoài máy. G0-06B đã xác minh off-machine backup thật qua Google Drive riêng tư.
-- **Validation:** Bash syntax, `uv lock --check`, locked sync, Ruff, 45 backup tests, 84 full tests, diff check và wheel smoke test đều đạt.
-- **Status:** G0-06B đã hoàn thành full off-machine cloud round-trip và restore validation.
-
----
-
-### DEC-012 — Off-machine backup target và cloud round-trip validation
-
-- **Context:** Local encrypted staging trên cùng máy/NVMe không phải off-machine backup.
-- **Decision:** G0-06B sử dụng Google Drive riêng tư làm off-machine target.
-- **Transfer:** upload/download thủ công qua trình duyệt; không dùng Drive API, rclone, OAuth integration, cloud SDK hoặc daemon sync.
-- **Không phải off-machine backup:** Btrfs snapshot, directory/partition khác cùng máy hoặc cùng NVMe, repository, GitHub source code và local staging.
-- **Encryption:** production archive dùng GPG symmetric AES-256.
-- **Passphrase:** đi qua pinentry/gpg-agent; không lưu trong CLI, env, config, Git, log hoặc cloud.
-- **Integrity:** ciphertext đi kèm outer SHA-256 sidecar.
-- **Validation:** production backup → checksum → local restore sanity test → upload → xóa local original → download → checksum → restore vào temporary destination → đối chiếu restored data.
-- **Validated archive:** `mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg`.
-- **Process improvement:** local restore sanity test được thực hiện trước upload và trước khi xóa local copy để xác nhận passphrase và restore usability.
-- **SQLite:** operational validation được skip vì `mowftee.sqlite3` chưa tồn tại trong dữ liệu thật hiện tại; không tính là failure.
-
-### DEC-013 — Canonical package versioning policy
-
-- **Context:** Release `v0.0.1` được tạo và tag thành công ở mốc kết thúc Phase 0 (commit `794ba78`), nhưng package metadata tại thời điểm đó vẫn mang giá trị `0.0.0`. Cần chốt chính sách versioning chuẩn cho dự án.
-- **Decision:**
-  1. `pyproject.toml` là nguồn chuẩn (canonical source of truth) cho package version.
-  2. `src/mowftee/__init__.py` (`__version__`) và `config/model-manifest.yaml` (`application.version`) phải luôn được đồng bộ trực tiếp với `pyproject.toml`.
-  3. Phiên bản trong chu kỳ phát triển giữa các release dùng định dạng `dev` (ví dụ `0.1.0.dev0`).
-  4. Trước mỗi release, version được bump chuẩn, chạy test, tạo release closure commit và gắn annotated Git tag khớp đúng phiên bản đó.
-  5. Không rewrite commit `794ba78` hay tag `v0.0.1` lịch sử.
-  6. Không áp dụng dynamic versioning machinery (`setuptools-scm`, `hatch-vcs`) tại thời điểm hiện tại.
-- **Reason:** Đơn giản, explicit, ít phụ thuộc bên ngoài, dễ audit và hoàn toàn phù hợp với quy mô dự án hiện tại.
-- **Revisit when:** Dự án chuyển sang quy trình CI/CD tự động hoá release hoàn toàn.
-
----
-
-### DEC-014 — Native CachyOS Ollama + Vulkan runtime setup
-
-- **Context:** Cần cài đặt và nghiệm thu LLM runtime local trên CachyOS, tận dụng RTX 3050 4GB VRAM.
-- **Decision:**
-  1. Cài hai CachyOS native packages: `ollama` (`0.32.6-1.1`) và `ollama-vulkan` (`0.32.6-1.1`).
-  2. Backend: Vulkan API (`vulkan-tools` verified Vulkan Instance 1.4.357, NVIDIA RTX 3050 Laptop GPU).
-  3. Service & Bind: `ollama.service` (`ollama:ollama`), `enabled` và `active`, bind loopback local-only `127.0.0.1:11434`.
-  4. Model Storage: `/srv/mowftee/models/ollama` (`ollama:ollama 0750`) trên subvolume `/@srv`.
-  5. Validation Smoke Model: `qwen3:0.6b` (digest `7df6b6e09427`, 522 MB) chạy 100% GPU via Vulkan để smoke test; KHÔNG đại diện cho default/winner model của Mowftee.
-  6. Persistence: Boot persistence được xác minh thành công qua post-reboot final gate test.
-- **Reason:** Ưu tiên package lifecycle native CachyOS, tránh dependency CUDA toolkit không cần thiết ở G1-01, giữ model storage tách biệt và API localhost-only; Vulkan/RTX 3050 đã được operationally validated.
-- **Revisit when:** Thay đổi GPU backend hoặc cập nhật lớn của CachyOS packages.
-
----
-
-### DEC-016 — LLM Provider Implementation & Runtime Configuration Boundary
-
-- **Context:** Cần đóng gói giao tiếp LLM REST API với Ollama thành `OllamaLLMProvider` có khả năng thay thế qua Protocol `LLMProvider`, hỗ trợ cả non-streaming, NDJSON streaming, thread-safe cancellation, real TTFT timing và metrics, đồng thời giữ ranh giới rõ ràng về nguồn cấu hình runtime.
-- **Decision:**
-  1. Xây dựng package `mowftee.llm` export các base dataclasses (`ChatMessage`, `LLMResponse`, `LLMStreamChunk`, `LLMMetrics`), phân cấp exception (`LLMError`, `LLMConnectionError`, `LLMTimeoutError`, `LLMResponseError`, `LLMCancelledError`), và `@runtime_checkable` `LLMProvider` Protocol.
-  2. Triển khai `OllamaLLMProvider` trong `src/mowftee/llm/ollama.py` dùng duy nhất stdlib `urllib.request` HTTP REST Client (zero external HTTP dependencies).
-  3. Cấu hình runtime duy nhất là `config/default.yaml` (`llm` section). `config/model-manifest.yaml` là file hồ sơ/metadata selection, KHÔNG được đọc ở runtime.
-  4. TTFT của streaming được đo thực tế bằng `time.perf_counter()` từ trước khi gửi HTTP request tới token content khác `""` đầu tiên.
-  5. Quản lý cancellation bằng registry `_active_requests`, trạng thái `_cancelled_requests`, và `_registry_lock`. Thao tác `response.close()` được thực hiện ngoài lock để tránh blocking I/O; cancel idempotency đảm bảo lần đầu trả `True`, các lần sau trả `False`.
-  6. Redaction logging nghiêm ngặt: không log prompt, message content, response text, options payload hay raw HTTP body.
-  7. Lệnh CLI `mow` và TUI interface là planned extension, KHÔNG kéo vào scope G1-03.
-- **Reason:** Bảo đảm kiến trúc modular monolith sạch, không hard-code API Ollama ngoài provider, tách biệt cấu hình runtime và metadata manifest, xử lý hủy request an toàn, và bảo vệ quyền riêng tư người dùng.
-- **Validated with:** 43 unit tests (`tests/test_llm_provider.py`), 154 total unit test suite (`uv run pytest`), real Ollama smoke test với `qwen3:4b-instruct` (health_check, chat, stream TTFT ~304ms, cancel, metrics), và manual interactive chat test.
-- **Revisit when:** Bổ sung LLM provider engine khác (ví dụ `llama.cpp` server) hoặc triển khai Conversation Manager ở G1-04.
-
----
+### DEC-016 — LLM Provider Implementation & Runtime Boundary
+- **Status:** Accepted
+- **Decision:** Implemented `OllamaLLMProvider` using stdlib `urllib.request` REST client under `@runtime_checkable` `LLMProvider` Protocol. Runtime config source is strictly `config/default.yaml` (`llm` section). Model manifest is a selection record, not read at runtime.
+- **Reason:** Zero external HTTP dependencies, clean provider isolation, and thread-safe cancellation.
 
 ### DEC-017 — Conversation Manager Atomic Turn Lifecycle & System Policy Layering
-
-- **Context:** Cần quản lý phiên hội thoại văn bản nhiều lượt, tiêm system prompt và thời gian thực tự động, giới hạn context window theo số cặp lượt gần nhất, hỗ trợ hủy request không gây nghẽn thread và bảo toàn lịch sử hội thoại khi gặp lỗi hoặc bị hủy.
-- **Decision:**
-  1. Triển khai package `mowftee.conversation` với `ConversationError`, `ConversationBusyError` và `ConversationManager`.
-  2. **Giao thức Atomic Turn Commit:** Cặp tin nhắn (`user`, `assistant`) chỉ được append đồng thời vào `_committed_history` trong RAM khi lượt hội thoại hoàn tất thành công. Nếu xảy ra lỗi HTTP, timeout hoặc hủy turn (`cancel_current_turn()`), `_committed_history` giữ nguyên 100% không bị mutate (không append-then-rollback).
-  3. **Quản lý Active Turn & Thread Safety:** Giới hạn tối đa 1 turn active trên mỗi `ConversationManager` instance qua `_active_lock` (`threading.Lock`). Yêu cầu turn mới khi đang active bị từ chối ngay lập tức bằng `ConversationBusyError`.
-  4. **Ghép Context Theo Lớp (Layered Context Assembly):** Context gửi tới LLM Provider được lắp ghép theo thứ tự: (1) Base system policy (`_system_prompt`) + (2) Dynamic ISO local datetime context (`_clock_fn`) khi `inject_datetime: true` + (3) Extension point + (4) Recent `max_turns` pairs gần nhất + (5) Pending user message.
-  5. **Giới hạn Context vs Stored History:** `max_turns` chỉ giới hạn số lượng cặp tin nhắn gần nhất đưa vào context gửi LLM; KHÔNG thực hiện cắt tỉa phá hủy (destructive trim) đối với `_committed_history` trong RAM.
-  6. **Lazy Streaming & Cancellation:** `stream_chat()` trả về generator lazily; việc claim active turn và gọi `provider.stream_chat()` chỉ diễn ra ở lần iteration `next(gen)` đầu tiên. Nếu generator đóng sớm (`gen.close()`), khối `finally` tự động hủy request bên dưới và dọn dẹp active state. `cancel_current_turn()` đọc active ID dưới lock rồi gọi `provider.cancel()` ngoài lock, thực thi tức thì mà không bị nghẽn deadlock.
-  7. **CLI Runner tối thiểu:** Triển khai `src/mowftee/cli.py` và `scripts/chat.sh` để nghiệm thu giao tiếp terminal trực tiếp. Canonical CLI tên chính thức vẫn là `mowftee`.
-- **Reason:** Đảm bảo tính nhất quán lịch sử hội thoại tuyệt đối, triệt tiêu lỗi model tự đoán ngày tháng sai nhờ tiêm datetime chính xác, xử lý hủy request an toàn không deadlock, và giữ cấu trúc sẵn sàng cho các mốc Persona / Memory tương lai.
-- **Validated with:** 25 unit tests (`tests/test_conversation.py`, `tests/test_cli.py`), 180 total unit test suite (`uv run pytest`), và real Ollama smoke test với `qwen3:4b-instruct` (health_check, non-stream chat, stream chat TTFT ~292ms & 100% chuẩn xác ngày tháng '8/8/2026', cancellation, clear_history, metrics).
-- **Revisit when:** Triển khai Phase 2 Persona Engine hoặc Phase 3 Long-term Memory Database.
-
----
+- **Status:** Accepted
+- **Decision:** Implemented `ConversationManager` with atomic turn commits (turns appended to committed history ONLY on successful completion). Thread-safe turn locking via `_active_lock`. Layered context assembly (system policy + ISO datetime injection + recent `max_turns` + pending message).
+- **Reason:** Prevent history corruption on stream failure or cancellation, ensure thread safety, and inject real-time context.
 
 ### DEC-018 — Phase 1 Validation & Release v0.1.0 Closure Boundary
-
-- **Context:** Cần nghiệm thu toàn bộ các cổng kiểm thử cuối cùng của Phase 1 (G1-05), lưu trữ bằng chứng benchmark chính thức tại đường dẫn quy chuẩn, và xác định ranh giới phát hành phiên bản release `v0.1.0`.
-- **Decision:**
-  1. **Kết quả kiểm thử G1-05:** 5-minute smoke soak (349.36s), 20-turn functional, 50-turn/60-minute stability (TTFT median 1.5518s, p95 1.7066s, 26.27 tok/s median, 0 crash/exception), reboot persistence, và Ollama service recovery (`LLMConnectionError` handling, preservation of committed history) đều đạt PASS.
-  2. **Canonical Benchmark Storage:** Bằng chứng thực nghiệm chính thức được tạo và lưu trữ dưới dạng JSON tại `${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/benchmarks/g1-05-phase1-benchmark.json`, đáp ứng hoàn toàn tiêu chí Definition of Done của Phase 1.
-  3. **Tài nguyên & Nhiệt độ:** RAM khả dụng phục hồi mốc baseline ~4.0 GiB sau khi unload model/reboot; VRAM chiếm ~2736 MiB; nhiệt độ CPU theo dõi có kiểm soát đạt peak 85°C (người vận hành ghi nhận peak ~91°C ở lượt chạy ban đầu); nhiệt độ GPU đạt peak 76°C; không ghi nhận bằng chứng về persistent memory leak hay thermal throttling trong lượt kiểm thử có kiểm soát.
-  4. **Canonical Versioning & Release Boundary:** Đồng bộ phiên bản package lên `0.1.0` tại `pyproject.toml`, `src/mowftee/__init__.py` và `config/model-manifest.yaml`. Gắn annotated tag Git `v0.1.0` đánh dấu mốc hoàn thành Phase 1 (Text Chat, Streaming & Benchmarks).
-  5. **Ranh giới Phase 2:** Hoàn tất Phase 1 mà không bắt đầu triển khai các tính năng của Phase 2 (Persona, Memory, Voice, Avatar, Tools).
-- **Reason:** Đảm bảo toàn bộ tiêu chí DoD của Phase 1 được xác minh bằng thực nghiệm và tài liệu hóa chuẩn xác trước khi phát hành `v0.1.0` và chuyển sang Phase 2.
-- **Revisit when:** Bắt đầu triển khai Phase 2 Persona Engine hoặc cập nhật baseline phần cứng.
-
+- **Status:** Accepted
+- **Decision:** Officially closed Phase 1 with release `v0.1.0` tag after passing Phase 1 Definition of Done and G1-05 benchmark tests. Saved benchmark artifact at `${XDG_STATE_HOME:-$HOME/.local/state}/mowftee/benchmarks/g1-05-phase1-benchmark.json`.
+- **Reason:** Complete Phase 1 Definition of Done verification and establish stable release baseline prior to Phase 2.
 
 ---
 
-## 16. Recovery architecture
+## 12. Source-of-Truth Pointers
 
-Local encrypted backup/restore đã được triển khai ở G0-06A.
-
-Backup ngoài máy đã được xác minh ở G0-06B bằng full cloud round-trip qua Google Drive riêng tư.
-
-### Có thể tải lại
-
-- Ollama/runtime.
-- Public LLM.
-- Public STT/TTS model.
-- Python packages.
-- Source từ GitHub.
-
-### Phải backup
-
-- Memory database.
-- Config thật.
-- Persona chưa push.
-- RAG data.
-- LoRA tự tạo.
-- Voice/model tự tạo.
-- Secret theo dạng mã hóa.
-
-### Recovery sequence
-
-```text
-Fresh OS
-→ clone Git
-→ run doctor
-→ install uv
-→ run `uv sync --locked`
-→ download model manifest
-→ restore private data
-→ run migrations
-→ run tests
-→ start application
-```
-
----
-
-## 17. Architectural reference & design direction (AIRI / Sanbaka lessons)
-
-Các nguyên tắc thiết kế và định hướng kiến trúc tham khảo từ dự án Sanbaka / Project AIRI (chỉ mang tính chất tài liệu tham khảo kiến trúc, không phải cam kết triển khai hay thay đổi thứ tự Phase trong lộ trình):
-
-### 17.1 Nguyên tắc thiết kế kiến trúc
-
-1. **Phân tách subsystem độc lập và hợp tác:** Mowftee được tiếp cận như các hệ thống con hợp tác với nhau: Brain / Conversation, Persona-State, Memory, Voice, Tools, Body (Avatar).
-2. **Persona động thay vì prompt tĩnh:** Persona không được biến thành một prompt tĩnh khổng lồ duy nhất. Thiết kế tương lai tách biệt rõ:
-   - Core identity (nhận dạng cốt lõi)
-   - Current conversational state (trạng thái hội thoại hiện tại)
-   - Learned user preferences (tùy chọn người dùng học được)
-   - Familiarity / relationship context (bối cảnh mối quan hệ / độ quen thuộc)
-   - Current conversation context (ngữ cảnh hội thoại hiện tại)
-3. **Thích ứng người dùng dựa trên bằng chứng và độ tin cậy:** User adaptation phải dựa trên evidence/confidence. Một chỉ thị tạm thời của người dùng không được tự động biến thành sở thích vĩnh viễn nếu chưa có đủ bằng chứng.
-4. **Phân định rõ ranh giới khái niệm:**
-   - **Memory:** Những gì Mowftee biết (what Mowftee knows).
-   - **Persona:** Mowftee là ai (who Mowftee is).
-   - **Adaptation:** Mowftee tương tác với người dùng như thế nào (how Mowftee interacts with the user).
-5. **Phân loại bộ nhớ tương lai:** Kiến trúc bộ nhớ tương lai có thể phân định giữa:
-   - Working / session memory
-   - Stable user facts
-   - Preferences
-   - Episodic memories
-   - Task / project memory
-   Cơ chế hợp nhất (consolidation) và quên (forgetting) chỉ được bổ sung khi có lý do thực nghiệm rõ ràng.
-6. **Kiến trúc Voice hỗ trợ streaming và ngắt lời:** Kiến trúc thoại tương lai phải hỗ trợ streaming và cơ chế ngắt lời (interruption / barge-in), không đơn thuần là chuỗi tuyến tính STT -> LLM -> TTS.
-7. **Avatar / Body nhận tín hiệu trạng thái trừu tượng:** Body/Avatar tiêu thụ các tín hiệu trạng thái và biểu cảm trừu tượng (abstract expression/state signals), không trực tiếp parse raw LLM text hay liên kết cứng với `ConversationManager`.
-8. **Học tập khái niệm kiến trúc, không sao chép toàn bộ stack:** Học các khái niệm kiến trúc từ AIRI/Sanbaka thay vì bê nguyên toàn bộ stack của họ. Giữ vững định hướng Mowftee là Linux-first, local-first, Python modular monolith trừ khi có bằng chứng kỹ thuật rõ ràng chứng minh cần thay đổi.
-9. **Phát triển tính liên tục theo thời gian:** Mowftee nên phát triển tính liên tục (continuity) qua quá trình tương tác thay vì mô phỏng một tính cách hoàn chỉnh cố định ngay từ ngày đầu tiên.
-
-### 17.2 Phạm vi & Định vị companion
-
-- **Persona Companion:** Mowftee hiện tại có định hướng mang hình ảnh nữ (female-presenting AI companion), tuy nhiên Phase 2 mới là giai đoạn chịu trách nhiệm chính định nghĩa và hoàn thiện persona thực tế.
-- **Tính chất tham chiếu:** Đây là định hướng thiết kế và tài liệu tham khảo kiến trúc (design direction / reference), không phải cam kết triển khai ngay hay thay đổi thứ tự roadmap hiện tại. Sanbaka / AIRI chỉ đóng vai trò dự án tham chiếu.
+- **Mandatory Working Rules:** [`../CLAUDE.md`](../CLAUDE.md)
+- **Development Router:** [`../README.md`](../README.md)
+- **Roadmap & Definition of Done:** [`PLAN.md`](PLAN.md)
+- **Current Handoff & Session State:** [`SESSION_PROMPT.md`](SESSION_PROMPT.md)
+- **Engineering History & Empirical Evidence:** [`LOG.md`](LOG.md)
+- **Runtime Model Metadata:** [`../config/model-manifest.yaml`](../config/model-manifest.yaml)
+- **Raw Hardware Survey:** [`../config/hardware-baseline.txt`](../config/hardware-baseline.txt)

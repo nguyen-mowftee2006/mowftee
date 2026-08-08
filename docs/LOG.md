@@ -768,3 +768,33 @@ Rà soát closure phát hiện việc ghi nhận mốc tiếp theo sang Phase 2 
 - `G1-05`: **Hoàn thành**.
 - `Giai đoạn 1 (v0.1.x)`: **Hoàn thành (`v0.1.0`)**.
 - `Phase 2 (v0.2.x Persona)`: `NEXT / NOT STARTED`.
+
+---
+
+## 2026-08-09 02:18 +07 — Post-Release Backup v0.1.0 Off-Machine Validation
+
+### Nội dung thực hiện
+
+1. **Quy ước tổ chức thư mục Backup ngoài máy:**
+   - Người vận hành thực hiện tái cấu trúc thư mục lưu trữ ngoại vi theo quy ước `$HOME/Mowftee Backups/Phase N - vX.Y.Z/`.
+   - Cặp file mã hóa Phase 0 (`mowftee-backup-20260807T072238Z-5dd3acf1.tar.gz.gpg` và `.sha256`) được di chuyển vào `$HOME/Mowftee Backups/Phase 0 - v0.0.1/` thuần túy về mặt tổ chức thư mục; tên hai file archive giữ nguyên.
+   - Rà soát cho thấy code và script chính thức trong repo không phụ thuộc vào đường dẫn staging cũ (`$HOME/Backups/mowftee-g0-06b-staging/`).
+
+2. **Tạo và nghiệm thu bản Backup Phase 1 (`v0.1.0`):**
+   - Chạy công cụ `./scripts/backup.sh --target "$HOME/Mowftee Backups/Phase 1 - v0.1.0" --include-benchmarks`.
+   - Sinh thành công cặp file mã hóa: `mowftee-backup-20260808T185947Z-31dac619.tar.gz.gpg` (1925 bytes, permissions `0600`) và sidecar `.sha256`.
+   - SHA-256 của archive: `e372f23b062445121acd72bee67ddfbe5ab456d63c834722c576c8d52487eeb0`.
+   - Kiểm thử local restore sanity test tới thư mục tạm ngoài repo PASS; `cmp` file `config.yaml` restored và `~/.config/mowftee/config.yaml` MATCH; file `optional/benchmarks/g1-05-phase1-benchmark.json` khôi phục đầy đủ.
+
+3. **Xác minh Cloud Round-trip (Google Drive):**
+   - Upload cả hai file lên thư mục `Mowftee Backups/Phase 1 - v0.1.0/` trên Google Drive riêng tư.
+   - Xoá cặp file gốc ở local, sau đó tải lại cặp file từ Google Drive về thư mục `$HOME/Downloads/`.
+   - Di chuyển cặp file vừa tải lại vào lại `$HOME/Mowftee Backups/Phase 1 - v0.1.0/` và set quyền `0600`.
+   - SHA-256 sau tải về hoàn toàn trùng khớp với hash ban đầu (`e372f23b062445121acd72bee67ddfbe5ab456d63c834722c576c8d52487eeb0`).
+   - Phục hồi thử nghiệm từ bản tải về thành công; manifest `mowftee_version` = `0.1.0`; benchmark JSON hợp lệ; `cmp` config MATCH.
+   - Thư mục Phase 0 giữ nguyên; working tree Git sạch.
+   - Bản backup thế hệ Phase 1 `v0.1.0` chính thức trở thành **known-good off-machine backup** cho phiên bản release `v0.1.0`.
+
+### Trạng thái
+
+- `Phase 1 Off-Machine Backup (v0.1.0)`: **Hoàn thành (PASS)**.
