@@ -17,25 +17,23 @@
 - **Stable Release:** `v0.1.0` (tag `v0.1.0`).
 - **Phase 1 Status:** COMPLETE.
 - **Phase 2 Status:** NEXT / NOT STARTED (no Phase 2 implementation has started).
-- **Branch Model:** `dev` is the active development branch; `main` points to stable `v0.1.0`.
+- **Branch Model:** `dev` is the active development branch (published to `origin/dev`); `main` points to stable `v0.1.0`.
 - **Package Version:** `0.1.0` (remains synchronized until an explicit version transition is approved).
+- **Documentation Refactor:** Refactor, audit, review/commit, and `dev` publication are COMPLETE.
+- **Cold-Start Validation:** Initial HQ cold-start test COMPLETE (exposed handoff/metadata ambiguity); SESSION handoff defect corrected; model-manifest investigated (no metadata schema change made as field semantics are not canonically defined); HQ cold-start RE-TEST NEXT; Worker cold-start test NOT YET RUN.
 
 ## 3. Current Development Objective
 
-**Current Objective (pre-Phase 2):** Standardize and optimize the entire documentation system on `dev` for zero-question cold-start handoff.
+**Current Objective (pre-Phase 2):** Complete cold-start acceptance testing before starting Phase 2 Persona implementation.
 
-**Planned Documentation Refactor Flow:**
-1. `SESSION_PROMPT.md` refactor (this step)
-2. `PLAN.md` normalization & DoD alignment
-3. `SYSTEM_ARCHITECTURE.md` living spec & decision log review
-4. `LOG.md` append-only audit
-5. Cross-link & consistency audit
-6. HQ cold-start test
-7. Worker cold-start test
-8. Review & commit on `dev`
-9. Prepare Phase 2 Persona implementation
+**Cold-Start Acceptance & Transition Flow:**
+1. Documentation refactor & publication on `dev` (COMPLETE)
+2. Initial HQ cold-start test & handoff defect correction (COMPLETE)
+3. HQ cold-start RE-TEST acceptance (NEXT)
+4. Worker cold-start test acceptance
+5. Prepare Phase 2 Persona implementation (Phase 2 starts ONLY after cold-start acceptance)
 
-*Note for future HQ/workers:* Inspect current working tree and Git diff (`git status -sb`, `git diff`) to resume from the first unfinished item without asking the operator.
+*Note for future HQ/workers:* Inspect current working tree and Git diff (`git status -sb`, `git diff`) to resume from the first unfinished acceptance step without asking the operator.
 
 ## 4. Released Capability Baseline
 
