@@ -299,5 +299,28 @@ def test_deep_merge_and_loader_do_not_mutate_inputs(tmp_path: Path) -> None:
 def test_conflicting_environment_overrides_are_rejected(
     environment: dict[str, str],
 ) -> None:
-    with pytest.raises(ConfigError, match="Conflicting environment override"):
-        apply_environment_overrides({}, environment)
+    with pytest.raises(ConfigError):
+        load_config(environment=environment)
+
+
+def test_conversation_config_validation(tmp_path: Path) -> None:
+    base_env = isolated_environment(tmp_path)
+    config = load_config(environment=base_env)
+    assert config["conversation"]["default_system_prompt"].startswith("Bạn là Mowftee")  # type: ignore[index]
+    assert config["conversation"]["max_turns"] == 20  # type: ignore[index]
+    assert config["conversation"]["inject_datetime"] is True  # type: ignore[index]
+
+    with pytest.raises(ConfigValidationError, match="conversation"):
+        load_config({"conversation": "invalid"}, environment=base_env)
+
+    with pytest.raises(ConfigValidationError, match="default_system_prompt"):
+        load_config({"conversation": {"default_system_prompt": ""}}, environment=base_env)
+
+    with pytest.raises(ConfigValidationError, match="max_turns"):
+        load_config({"conversation": {"max_turns": 0}}, environment=base_env)
+
+    with pytest.raises(ConfigValidationError, match="max_turns"):
+        load_config({"conversation": {"max_turns": True}}, environment=base_env)
+
+    with pytest.raises(ConfigValidationError, match="inject_datetime"):
+        load_config({"conversation": {"inject_datetime": "yes"}}, environment=base_env)

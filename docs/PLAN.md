@@ -4,7 +4,7 @@
 
 - **Dự án:** Mowftee
 - **Nền tảng chính:** CachyOS, Hyprland, Btrfs
-- **Trạng thái:** Giai đoạn 0 hoàn thành (`v0.0.1`); G1-01, G1-02, G1-03 hoàn thành; G1-04 Conversation Manager là NEXT
+- **Trạng thái:** Giai đoạn 0 hoàn thành (`v0.0.1`); G1-01, G1-02, G1-03, G1-04 hoàn thành; G1-05 Test và benchmark là NEXT
 - **Mục tiêu release:** `v1.0.0`
 - **Ngôn ngữ tương tác chính:** Tiếng Việt
 - **Nguyên tắc:** Hoàn thành, kiểm thử, ghi log và commit từng bước trước khi chuyển tiếp
@@ -531,18 +531,24 @@ Rollback:
 
 ### Bước G1-04 — Conversation Manager
 
-- **Trạng thái:** Tiếp theo (NEXT / NOT STARTED).
-
-Chức năng:
-
-- System message.
-- Lịch sử trong RAM.
-- Giới hạn context.
-- Lệnh thoát.
-- Hủy phản hồi.
-- Streaming ra terminal.
+- **Trạng thái:** Hoàn thành.
+- **Base types & Exceptions:** `src/mowftee/conversation/base.py` (`ConversationError`, `ConversationBusyError`).
+- **Implementation:** `src/mowftee/conversation/manager.py` (`ConversationManager` với `chat()`, `stream_chat()`, `get_history()`, `clear_history()`, `cancel_current_turn()`, `@property session_id`).
+- **Capabilities implemented:**
+  - System message / policy khởi đầu tiếng Việt tự nhiên và hỗ trợ tiêm ISO local datetime tự động vào context động (`inject_datetime: true`).
+  - Lịch sử hội thoại trong RAM được bảo vệ theo giao thức atomic turn commit (chỉ commit cặp `user` + `assistant` khi turn thành công).
+  - Giới hạn context window theo `max_turns` cặp gần nhất, không tự xoá lịch sử gốc trong RAM.
+  - Lệnh thoát (`/exit`, `/quit`) và xoá lịch sử (`/reset`, `/clear`).
+  - Hủy phản hồi turn hiện tại qua `cancel_current_turn()`, tự động ngắt HTTP stream socket và không lưu assistant output dở dang.
+  - Minimal terminal runner: `src/mowftee/cli.py` & `scripts/chat.sh` hỗ trợ tương tác hội thoại trực tiếp ra terminal.
+- **Unit Tests:** `tests/test_conversation.py` (21 unit tests), `tests/test_cli.py` (4 unit tests), tổng bộ test đạt 180 passed.
+- **Real Ollama Smoke Test:** PASS với `qwen3:4b-instruct` (health_check ~1.57ms, non-stream turn 1 PASS, stream turn 2 TTFT ~292.12ms & ~34.95 tok/s với câu trả lời ngày tháng 100% chuẩn xác '8/8/2026', turn 3 cancellation PASS, clear_history PASS, metrics final total=3, success=2, failed=1).
 
 ### Bước G1-05 — Test và benchmark
+
+- **Trạng thái:** Tiếp theo (NEXT / NOT STARTED).
+
+Chức năng & Yêu cầu:
 
 - Smoke test 5 phút.
 - Functional test 20 lượt.

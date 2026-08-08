@@ -277,6 +277,21 @@ def validate_config(config: ConfigMapping) -> ConfigDict:
             "Field 'llm.health_timeout' must be a number greater than 0"
         )
 
+    conversation = _require_section(validated, "conversation")
+    default_sys = conversation.get("default_system_prompt")
+    if not isinstance(default_sys, str) or not default_sys.strip():
+        raise ConfigValidationError(
+            "Field 'conversation.default_system_prompt' must be a non-empty string"
+        )
+
+    max_turns = conversation.get("max_turns")
+    if type(max_turns) is not int or max_turns <= 0:
+        raise ConfigValidationError(
+            "Field 'conversation.max_turns' must be an integer greater than 0"
+        )
+
+    _require_bool(conversation, "conversation.inject_datetime", "inject_datetime")
+
     return validated
 
 

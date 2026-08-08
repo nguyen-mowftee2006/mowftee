@@ -26,3 +26,8 @@ llm:
   base_url: http://127.0.0.1:11434
   timeout: 30.0
   health_timeout: 2.0
+
+conversation:
+  default_system_prompt: "Bạn là Mowftee, một bạn đồng hành AI bằng tiếng Việt. Hãy phản hồi tự nhiên, ngắn gọn, thân thiện và xưng hô hợp lý. Tránh trả lời bằng các câu mẫu trợ lý doanh nghiệp rập khuôn."
+  max_turns: 20
+  inject_datetime: true

@@ -23,8 +23,9 @@ Mowftee là tên duy nhất được dùng cho sản phẩm và các định dan
 - **LLM runtime:** Installed & Validated (Ollama 0.32.6-1.1 + ollama-vulkan 0.32.6-1.1 via Vulkan backend on RTX 3050, systemd enabled/active, bind 127.0.0.1:11434)
 - **Default model:** `qwen3:4b-instruct` (digest `0edcdef34593`, `Q4_K_M`); Performance fallback: `llama3.2:3b` (digest `a80c4f17acd5`, `Q4_K_M`)
 - **LLM Provider:** Implemented & Validated (`OllamaLLMProvider` in `src/mowftee/llm/ollama.py`)
+- **Conversation Manager:** Implemented & Validated (`ConversationManager` in `src/mowftee/conversation/manager.py`)
 - **Voice stack:** Not selected
-- **Current project phase:** Giai đoạn 1; G1-01, G1-02 & G1-03 Complete; bước tiếp theo là G1-04 — Conversation Manager
+- **Current project phase:** Giai đoạn 1 (v0.1.x IN PROGRESS); G1-01, G1-02, G1-03 & G1-04 Complete; bước tiếp theo là G1-05 — Test và benchmark
 
 ---
 
@@ -681,6 +682,23 @@ Mỗi dòng là một JSON object UTF-8 với các field thống nhất: `timest
 - **Reason:** Bảo đảm kiến trúc modular monolith sạch, không hard-code API Ollama ngoài provider, tách biệt cấu hình runtime và metadata manifest, xử lý hủy request an toàn, và bảo vệ quyền riêng tư người dùng.
 - **Validated with:** 43 unit tests (`tests/test_llm_provider.py`), 154 total unit test suite (`uv run pytest`), real Ollama smoke test với `qwen3:4b-instruct` (health_check, chat, stream TTFT ~304ms, cancel, metrics), và manual interactive chat test.
 - **Revisit when:** Bổ sung LLM provider engine khác (ví dụ `llama.cpp` server) hoặc triển khai Conversation Manager ở G1-04.
+
+---
+
+### DEC-017 — Conversation Manager Atomic Turn Lifecycle & System Policy Layering
+
+- **Context:** Cần quản lý phiên hội thoại văn bản nhiều lượt, tiêm system prompt và thời gian thực tự động, giới hạn context window theo số cặp lượt gần nhất, hỗ trợ hủy request không gây nghẽn thread và bảo toàn lịch sử hội thoại khi gặp lỗi hoặc bị hủy.
+- **Decision:**
+  1. Triển khai package `mowftee.conversation` với `ConversationError`, `ConversationBusyError` và `ConversationManager`.
+  2. **Giao thức Atomic Turn Commit:** Cặp tin nhắn (`user`, `assistant`) chỉ được append đồng thời vào `_committed_history` trong RAM khi lượt hội thoại hoàn tất thành công. Nếu xảy ra lỗi HTTP, timeout hoặc hủy turn (`cancel_current_turn()`), `_committed_history` giữ nguyên 100% không bị mutate (không append-then-rollback).
+  3. **Quản lý Active Turn & Thread Safety:** Giới hạn tối đa 1 turn active trên mỗi `ConversationManager` instance qua `_active_lock` (`threading.Lock`). Yêu cầu turn mới khi đang active bị từ chối ngay lập tức bằng `ConversationBusyError`.
+  4. **Ghép Context Theo Lớp (Layered Context Assembly):** Context gửi tới LLM Provider được lắp ghép theo thứ tự: (1) Base system policy (`_system_prompt`) + (2) Dynamic ISO local datetime context (`_clock_fn`) khi `inject_datetime: true` + (3) Extension point + (4) Recent `max_turns` pairs gần nhất + (5) Pending user message.
+  5. **Giới hạn Context vs Stored History:** `max_turns` chỉ giới hạn số lượng cặp tin nhắn gần nhất đưa vào context gửi LLM; KHÔNG thực hiện cắt tỉa phá hủy (destructive trim) đối với `_committed_history` trong RAM.
+  6. **Lazy Streaming & Cancellation:** `stream_chat()` trả về generator lazily; việc claim active turn và gọi `provider.stream_chat()` chỉ diễn ra ở lần iteration `next(gen)` đầu tiên. Nếu generator đóng sớm (`gen.close()`), khối `finally` tự động hủy request bên dưới và dọn dẹp active state. `cancel_current_turn()` đọc active ID dưới lock rồi gọi `provider.cancel()` ngoài lock, thực thi tức thì mà không bị nghẽn deadlock.
+  7. **CLI Runner tối thiểu:** Triển khai `src/mowftee/cli.py` và `scripts/chat.sh` để nghiệm thu giao tiếp terminal trực tiếp. Canonical CLI tên chính thức vẫn là `mowftee`.
+- **Reason:** Đảm bảo tính nhất quán lịch sử hội thoại tuyệt đối, triệt tiêu lỗi model tự đoán ngày tháng sai nhờ tiêm datetime chính xác, xử lý hủy request an toàn không deadlock, và giữ cấu trúc sẵn sàng cho các mốc Persona / Memory tương lai.
+- **Validated with:** 25 unit tests (`tests/test_conversation.py`, `tests/test_cli.py`), 180 total unit test suite (`uv run pytest`), và real Ollama smoke test với `qwen3:4b-instruct` (health_check, non-stream chat, stream chat TTFT ~292ms & 100% chuẩn xác ngày tháng '8/8/2026', cancellation, clear_history, metrics).
+- **Revisit when:** Triển khai Phase 2 Persona Engine hoặc Phase 3 Long-term Memory Database.
 
 ---
 

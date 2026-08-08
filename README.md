@@ -15,8 +15,9 @@ Dự án lấy cảm hứng từ cách tương tác của AI VTuber, nhưng khô
   - Default Model: `qwen3:4b-instruct`
   - Performance Fallback: `llama3.2:3b`
 - **G1-03 Complete:** LLM Provider (`OllamaLLMProvider`) đã viết và nghiệm thu thành công (REST HTTP, non-stream, streaming, thread-safe cancel, real TTFT, metrics, privacy redaction & real Ollama smoke PASS).
+- **G1-04 Complete:** Conversation Manager (`ConversationManager`) và CLI runner tối thiểu (`mowftee.cli`, `scripts/chat.sh`) đã viết và nghiệm thu thành công (atomic turn commit, system policy & real-time datetime injection, lazy streaming, non-blocking cancellation & real Ollama smoke PASS).
 - **Model Storage:** `/srv/mowftee/models/ollama/`
-- **Bước tiếp theo:** `G1-04 — Conversation Manager`
+- **Bước tiếp theo:** `G1-05 — Test và benchmark`
 
 ## Mục tiêu
 

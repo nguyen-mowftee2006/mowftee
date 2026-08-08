@@ -681,3 +681,57 @@ Xây dựng module `mowftee.llm` để đóng gói giao tiếp HTTP REST API v�
 ### Việc tiếp theo
 
 `G1-04 — Conversation Manager` (NEXT / NOT STARTED).
+
+
+---
+
+## 2026-08-08 15:45 +07 — G1-04 Viết Conversation Manager & Minimal CLI
+
+### Mục tiêu
+
+Xây dựng module `mowftee.conversation` quản lý phiên hội thoại nhiều lượt (`ConversationManager`), tiêm system prompt tiếng Việt tự nhiên và thời gian thực (`inject_datetime`), quản lý cửa sổ ngữ cảnh (`max_turns`), bảo đảm giao thức atomic turn commit, hỗ trợ hủy request thread-safe, và cung cấp giao diện terminal CLI tối thiểu (`mowftee.cli`, `scripts/chat.sh`).
+
+### Quá trình thực hiện & Thiết kế chính
+
+1. **Phân cấp ngoại lệ & Cấu hình (`src/mowftee/conversation/base.py`, `config/default.yaml`, `src/mowftee/config.py`):**
+   - Ngoại lệ: `ConversationError(Exception)` gốc và `ConversationBusyError(ConversationError)` ném khi gọi turn mới lúc đang active.
+   - Cấu hình section `conversation`: `default_system_prompt`, `max_turns: 20`, `inject_datetime: true`.
+
+2. **ConversationManager Implementation (`src/mowftee/conversation/manager.py`):**
+   - **Atomic Turn Commit:** Chỉ commit cặp `user` + `assistant` vào `_committed_history` khi turn thành công. Nếu lỗi/cancel, `_committed_history` giữ nguyên 100% (không dùng append-then-rollback).
+   - **One Active Turn Rule:** Bảo vệ bằng `_active_lock` (`threading.Lock`). Giới hạn tối đa 1 turn active per session instance; từ chối turn mới bằng `ConversationBusyError`.
+   - **Context Assembly Layering:** Assemble theo thứ tự: (1) Base system policy + (2) Dynamic ISO local datetime context (`_clock_fn`) + (3) Extension point + (4) Recent `max_turns` pairs + (5) Pending user message.
+   - **Lazy Streaming:** `stream_chat()` trả về generator; active lock và HTTP request chỉ khởi chạy ở lần `next(gen)` / iteration đầu tiên.
+   - **Early Generator Close & Cancel:** `gen.close()` trước khi done sẽ kích hoạt `finally` gọi `provider.cancel(effective_request_id)` ngắt socket và xoá active state.
+   - **Non-blocking Cancel:** `cancel_current_turn()` đọc `active_id` dưới lock rồi gọi `provider.cancel(active_id)` ngoài lock (<0.5s, không deadlock).
+
+3. **Minimal Terminal Runner (`src/mowftee/cli.py`, `scripts/chat.sh`):**
+   - Vòng lặp văn bản terminal đơn giản hỗ trợ streaming output, câu lệnh `/exit`, `/quit`, `/reset`, `/clear` và ngắt Ctrl+C qua `cancel_current_turn()`.
+
+4. **Unit Test Suite & Real Smoke:**
+   - 25 unit tests mới (`tests/test_conversation.py`, `tests/test_cli.py`), nâng tổng bộ test lên 180 passed.
+   - Real Ollama smoke test với `qwen3:4b-instruct`: health_check ~1.57ms, non-stream turn 1 PASS, stream turn 2 TTFT ~292.12ms & ~34.95 tok/s với câu trả lời ngày tháng 100% chuẩn xác ("Hôm nay là ngày 8 tháng 8 năm 2026 nha!"), turn 3 cancellation PASS, clear_history PASS, metrics total=3, success=2, failed=1.
+
+### Trạng thái
+
+`G1-04`: **Hoàn thành**.
+
+### Việc tiếp theo
+
+`Phase 2 — v0.2.x Persona` (NEXT / NOT STARTED).
+
+
+---
+
+## 2026-08-08 15:58 +07 — G1-04 Roadmap Closure Correction
+
+### Rà soát & Đính chính Roadmap
+
+Rà soát closure phát hiện việc ghi nhận mốc tiếp theo sang Phase 2 là chưa chính xác với roadmap canonical trong `PLAN.md`. Giai đoạn 1 (v0.1.x) vẫn còn mốc `G1-05 — Test và benchmark` (smoke test 5 phút, functional test 20 lượt, stability test 50 lượt/60 phút, reboot test, và Ollama service recovery test) chưa thực hiện.
+
+### Trạng thái Đính chính
+
+- `G1-04`: **Hoàn thành**.
+- `G1-05`: `NEXT / NOT STARTED`.
+- `Giai đoạn 1 (v0.1.x)`: `IN PROGRESS`.
+- `Phase 2 (v0.2.x Persona)`: `NOT STARTED`.
