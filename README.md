@@ -19,4 +19,5 @@ Mowftee là một AI companion local-first, ưu tiên tiếng Việt, được t
 ---
 
 Mowftee là dự án cá nhân open-source đang trong quá trình phát triển tích cực.
-Dự án tạm ngừng phát triển thêm
+
+Dự án tạm ngừng!
